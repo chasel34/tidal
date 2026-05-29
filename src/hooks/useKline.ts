@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiKline } from "@/lib/api-client";
 import { hasKlineMarket } from "@/lib/client-util";
-import type { Candle } from "@/components/charts/CandleChart";
+import type { Candle } from "@/components/shared/charts/CandleChart";
 
 export interface KlineView {
   candles: Candle[];

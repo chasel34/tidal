@@ -4,7 +4,7 @@ import type { Palette } from "@/lib/theme";
 import type { IndexQuote, TabId } from "@/lib/types";
 import { cFmtPct, cMove } from "@/lib/format";
 import { useStore } from "@/store/useStore";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "today", label: "今天", icon: "◉" },

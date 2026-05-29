@@ -7,9 +7,9 @@ import { cFmtNum, cFmtPct, cMove } from "@/lib/format";
 import { apiQuotes } from "@/lib/api-client";
 import { useStore } from "@/store/useStore";
 import { useSearch } from "@/hooks/useSearch";
-import { Modal } from "@/components/ui/Modal";
-import { SearchField } from "@/components/ui/SearchField";
-import { tidalBtn } from "@/components/ui/styles";
+import { Modal } from "@/components/shared/ui/Modal";
+import { SearchField } from "@/components/shared/ui/SearchField";
+import { tidalBtn } from "@/components/shared/ui/styles";
 
 /** Fetch quotes for the visible search results. */
 function useResultQuotes(results: SearchResultDTO[]): Record<string, Quote> {
