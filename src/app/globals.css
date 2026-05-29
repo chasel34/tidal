@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --app-bg: #faf9f6;
+}
+
+:root[data-theme="dark"] {
+  --app-bg: #161619;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--app-bg);
+  font-family: "PingFang SC", "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(91, 79, 212, 0.18);
+}
