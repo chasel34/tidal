@@ -7,9 +7,9 @@ import { cFmtMoney, cFmtNum, cFmtPct, cMove } from "@/lib/format";
 import { apiQuotes } from "@/lib/api-client";
 import { useStore } from "@/store/useStore";
 import { useSearch } from "@/hooks/useSearch";
-import { Modal } from "@/components/ui/Modal";
-import { SearchField } from "@/components/ui/SearchField";
-import { tidalBtn, tidalInput } from "@/components/ui/styles";
+import { Modal } from "@/components/shared/ui/Modal";
+import { SearchField } from "@/components/shared/ui/SearchField";
+import { tidalBtn, tidalInput } from "@/components/shared/ui/styles";
 
 export function HoldingModal({
   P,

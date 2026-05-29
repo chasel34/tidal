@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { useQuotes } from "@/hooks/useQuotes";
-import { Sidebar } from "@/components/Sidebar";
-import { TodayPane } from "@/components/panes/TodayPane";
-import { HoldingsPane } from "@/components/panes/HoldingsPane";
-import { WatchPane } from "@/components/panes/WatchPane";
-import { AddWatchModal } from "@/components/modals/AddWatchModal";
-import { HoldingModal } from "@/components/modals/HoldingModal";
-import type { ModalState } from "@/components/panes/types";
+import { Sidebar } from "@/components/pc/Sidebar";
+import { TodayPane } from "@/components/pc/panes/TodayPane";
+import { HoldingsPane } from "@/components/pc/panes/HoldingsPane";
+import { WatchPane } from "@/components/pc/panes/WatchPane";
+import { AddWatchModal } from "@/components/pc/modals/AddWatchModal";
+import { HoldingModal } from "@/components/pc/modals/HoldingModal";
+import type { ModalState } from "@/components/pc/panes/types";
 
 export function TidalApp() {
   const store = useStore();

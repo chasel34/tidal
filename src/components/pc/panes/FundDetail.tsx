@@ -7,9 +7,9 @@ import { cFmtMoney, cFmtNum, cFmtPct, cMove } from "@/lib/format";
 import { nextTradingDay } from "@/lib/client-util";
 import { useStore } from "@/store/useStore";
 import { useFundProfile } from "@/hooks/useFundProfile";
-import { AreaChart } from "@/components/charts/AreaChart";
-import { Stat } from "@/components/ui/Stat";
-import { tidalBtn } from "@/components/ui/styles";
+import { AreaChart } from "@/components/shared/charts/AreaChart";
+import { Stat } from "@/components/shared/ui/Stat";
+import { tidalBtn } from "@/components/shared/ui/styles";
 import type { DetailPeriod } from "@/lib/types";
 import type { ModalState } from "./types";
 

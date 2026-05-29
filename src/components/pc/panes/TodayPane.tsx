@@ -7,10 +7,10 @@ import { cFmtCompact, cFmtMoney, cFmtPct, cMove } from "@/lib/format";
 import { useStore } from "@/store/useStore";
 import { usePortfolioSeries } from "@/hooks/usePortfolioSeries";
 import { useDailyCloses } from "@/hooks/useDailyCloses";
-import { Donut } from "@/components/charts/Donut";
-import { AreaChart } from "@/components/charts/AreaChart";
-import { Spark } from "@/components/charts/Spark";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { Donut } from "@/components/shared/charts/Donut";
+import { AreaChart } from "@/components/shared/charts/AreaChart";
+import { Spark } from "@/components/shared/charts/Spark";
+import { EmptyState } from "@/components/shared/ui/EmptyState";
 import type { Period, HoldingFull, WatchFull, Instrument } from "@/lib/types";
 import type { PaneProps } from "./types";
 
