@@ -17,7 +17,7 @@ export default function MobileLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div style={{ minHeight: "100dvh" }}>
+    <div style={{ height: "100dvh", overflow: "hidden" }}>
       <style>{`@keyframes msheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
       {children}
     </div>

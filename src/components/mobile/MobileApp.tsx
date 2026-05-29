@@ -47,7 +47,7 @@ export function MobileApp() {
     ? holdingsFull.find((h) => h.code === detail) || watchFull.find((w) => w.code === detail) || null
     : null;
 
-  const isFund = detailInst ? detailInst.category === "fund" && detailInst.market === "of" : false;
+  const isFund = detailInst ? detailInst.category === "fund" && detailInst.market?.toLowerCase() === "jj" : false;
 
   // Top bar config
   let topTitle = "";
@@ -81,7 +81,7 @@ export function MobileApp() {
     topRight = (
       <button
         onClick={() => store.setTheme(theme === "dark" ? "light" : "dark")}
-        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: P.muted }}
+        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 26, color: P.muted }}
       >
         {theme === "dark" ? "☀" : "☾"}
       </button>

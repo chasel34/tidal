@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
+import { useDailyCloses } from "@/hooks/useDailyCloses";
 import { cFmtPct, cMove } from "@/lib/format";
 import { MCard } from "@/components/mobile/ui/MCard";
 import { MEmpty } from "@/components/mobile/ui/MEmpty";
@@ -91,7 +92,8 @@ function MSwipeRow({ children, onDelete, P }: { children: React.ReactNode; onDel
 export function MWatch({ goDetail, openSheet }: MWatchProps) {
   const store = useStore();
   const P = usePalette();
-  const { sortedWatch, sortW, toggleSortW, theme, removeWatch } = store;
+  const { sortedWatch, sortW, toggleSortW, theme, removeWatch, watchFull } = store;
+  const sparks = useDailyCloses(watchFull);
 
   if (sortedWatch.length === 0) {
     return (
@@ -167,7 +169,7 @@ export function MWatch({ goDetail, openSheet }: MWatchProps) {
                 <div style={{ fontSize: 14, fontWeight: 500, color: P.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.name}</div>
                 <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{w.code} · {w.market} · {store.typeLabel(w)}</div>
               </div>
-              <Spark data={[]} width={48} height={18} color={cMove(w.todayPct, theme)} />
+              <Spark data={sparks[w.code] || []} width={48} height={18} color={cMove(w.todayPct, theme)} />
               <div style={{ textAlign: "right", marginLeft: 12, minWidth: 64 }}>
                 <div style={{ fontSize: 13.5, fontVariantNumeric: "tabular-nums", color: P.text }}>{w.price.toFixed(2)}</div>
                 <span style={{

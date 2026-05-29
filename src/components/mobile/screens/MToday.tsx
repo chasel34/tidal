@@ -1,15 +1,20 @@
 "use client";
 
+import { useMemo } from "react";
 import { useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
-import { cFmtMoney, cFmtPct, cMove } from "@/lib/format";
+import { usePortfolioSeries } from "@/hooks/usePortfolioSeries";
+import { useDailyCloses } from "@/hooks/useDailyCloses";
+import { cFmtMoney, cFmtPct, cFmtCompact, cMove } from "@/lib/format";
 import { allocColors } from "@/lib/theme";
 import { MCard } from "@/components/mobile/ui/MCard";
 import { MSegmented } from "@/components/mobile/ui/MSegmented";
 import { MSectionLabel } from "@/components/mobile/ui/MSectionLabel";
+import { MArea } from "@/components/mobile/charts/MArea";
 import { Spark } from "@/components/shared/charts/Spark";
 import { Donut } from "@/components/shared/charts/Donut";
-import { useState } from "react";
+import { MIndexBar } from "@/components/mobile/ui/MIndexBar";
+import type { Instrument, Period } from "@/lib/types";
 
 type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
 
@@ -21,15 +26,25 @@ interface MTodayProps {
 export function MToday({ goDetail, openSheet }: MTodayProps) {
   const store = useStore();
   const P = usePalette();
-  const { summary, allocation, sortedHoldings, sortedWatch, theme } = store;
-  const [period, setPeriod] = useState("1M");
+  const { summary, allocation, sortedHoldings, sortedWatch, theme, period, setPeriod } = store;
+  const { series, labels, loading } = usePortfolioSeries(period);
   const colors = allocColors(P.isDark);
+
+  const miniInstruments = useMemo<Instrument[]>(() => {
+    const codes = new Map<string, Instrument>();
+    sortedHoldings.slice(0, 5).forEach((h) => codes.set(h.code, h));
+    [...sortedWatch].sort((a, b) => b.todayPct - a.todayPct).slice(0, 5).forEach((w) => codes.set(w.code, w));
+    return [...codes.values()];
+  }, [sortedHoldings, sortedWatch]);
+  const sparks = useDailyCloses(miniInstruments);
 
   const topHoldings = sortedHoldings.slice(0, 4);
   const topWatch = [...sortedWatch].sort((a, b) => Math.abs(b.todayPct) - Math.abs(a.todayPct)).slice(0, 4);
 
   return (
-    <div style={{ padding: "0 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <MIndexBar P={P} theme={theme} quotes={store.quotes} onGoWatch={() => store.setTab("watch")} />
+      <div style={{ padding: "0 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "20px 0 8px" }}>
         <div style={{ fontSize: 12, color: P.subtle, letterSpacing: "0.06em", marginBottom: 6 }}>今日盈亏</div>
@@ -43,13 +58,19 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
         </div>
       </div>
 
-      {/* Chart placeholder */}
+      {/* Chart */}
       <MCard P={P}>
         <MSectionLabel P={P}>资产走势</MSectionLabel>
-        <div style={{ height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: P.subtle, fontSize: 13 }}>
-          暂无走势数据
+        {loading && series.length === 0 ? (
+          <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: P.subtle, fontSize: 13 }}>加载中...</div>
+        ) : series.length > 0 ? (
+          <MArea series={series} labels={labels} height={200} P={P} formatValue={(v) => cFmtMoney(v, { dec: 0 })} formatY={cFmtCompact} />
+        ) : (
+          <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: P.subtle, fontSize: 13 }}>暂无走势数据</div>
+        )}
+        <div style={{ marginTop: 10 }}>
+          <MSegmented P={P} options={["1D", "1W", "1M", "3M", "1Y"]} value={period} onChange={(v) => setPeriod(v as Period)} size="sm" />
         </div>
-        <MSegmented P={P} options={["1W", "1M", "3M", "1Y"]} value={period} onChange={setPeriod} size="sm" />
       </MCard>
 
       {/* Allocation */}
@@ -103,7 +124,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
                   <div style={{ fontSize: 14, fontWeight: 500, color: P.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name}</div>
                   <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{h.code} · {store.typeLabel(h)}</div>
                 </div>
-                <Spark data={[]} width={48} height={18} color={cMove(h.todayPct, theme)} />
+                <Spark data={sparks[h.code] || []} width={48} height={18} color={cMove(h.todayPct, theme)} />
                 <div style={{ textAlign: "right", marginLeft: 12, minWidth: 64 }}>
                   <div style={{ fontSize: 13.5, fontVariantNumeric: "tabular-nums", color: P.text }}>{h.price.toFixed(2)}</div>
                   <div style={{ fontSize: 11.5, color: cMove(h.todayPct, theme), fontVariantNumeric: "tabular-nums" }}>{cFmtPct(h.todayPct)}</div>
@@ -144,7 +165,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
                   <div style={{ fontSize: 14, fontWeight: 500, color: P.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.name}</div>
                   <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{w.code} · {store.typeLabel(w)}</div>
                 </div>
-                <Spark data={[]} width={48} height={18} color={cMove(w.todayPct, theme)} />
+                <Spark data={sparks[w.code] || []} width={48} height={18} color={cMove(w.todayPct, theme)} />
                 <div style={{ textAlign: "right", marginLeft: 12, minWidth: 64 }}>
                   <div style={{ fontSize: 13.5, fontVariantNumeric: "tabular-nums", color: P.text }}>{w.price.toFixed(2)}</div>
                   <div style={{ fontSize: 11.5, color: cMove(w.todayPct, theme), fontVariantNumeric: "tabular-nums" }}>{cFmtPct(w.todayPct)}</div>
@@ -154,6 +175,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
           </MCard>
         </div>
       )}
+    </div>
     </div>
   );
 }
