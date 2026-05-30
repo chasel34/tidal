@@ -12,7 +12,7 @@ import {
 import { join } from "node:path";
 import { deflateSync } from "node:zlib";
 import { DASHBOARD_URL, INDICES } from "@shared/constants";
-import { cFmtMoney, cFmtPct } from "@shared/format";
+import type { TrayImagePayload } from "@shared/ipc";
 import type { Instrument, MenubarConfig, Quote } from "@shared/types";
 import {
   exportConfigToDialog,
@@ -153,7 +153,7 @@ function createPopoverWindow(): BrowserWindow {
   if (popoverWindow && !popoverWindow.isDestroyed()) return popoverWindow;
   popoverWindow = new BrowserWindow({
     width: 320,
-    height: 760,
+    height: 640,
     show: false,
     frame: false,
     resizable: false,
@@ -203,17 +203,22 @@ function createSettingsWindow(): BrowserWindow {
   return settingsWindow;
 }
 
-function positionPopover(window: BrowserWindow) {
-  const trayBounds = tray?.getBounds();
-  const displayBounds = trayBounds ?? { x: 0, y: 0, width: 0, height: 24 };
-  const winBounds = window.getBounds();
+function displayForTray() {
+  const bounds = tray?.getBounds() ?? { x: 0, y: 0, width: 0, height: 24 };
   const display = screen.getDisplayNearestPoint({
-    x: Math.round(displayBounds.x + displayBounds.width / 2),
-    y: Math.round(displayBounds.y + displayBounds.height / 2),
+    x: Math.round(bounds.x + bounds.width / 2),
+    y: Math.round(bounds.y + bounds.height / 2),
   });
+  return { bounds, display };
+}
+
+function positionPopover(window: BrowserWindow) {
+  const { bounds, display } = displayForTray();
+  const winBounds = window.getBounds();
   const workArea = display.workArea;
-  const x = Math.round(displayBounds.x + displayBounds.width / 2 - winBounds.width / 2);
-  const y = Math.round(displayBounds.y + displayBounds.height + 6);
+  // Align the popover's right edge to the tray item (design anchors right, not center).
+  const x = Math.round(bounds.x + bounds.width - winBounds.width + 4);
+  const y = Math.round(bounds.y + bounds.height + 6);
   const minX = workArea.x + 6;
   const minY = workArea.y + 6;
   const maxX = workArea.x + workArea.width - winBounds.width - 6;
@@ -241,20 +246,29 @@ function openSettings() {
   window.focus();
 }
 
-function updateTrayLabel(payload: {
-  mode: MenubarConfig["menubarMode"];
-  totalAssets: number;
-  todayPct: number;
-  hasPortfolio: boolean;
-}) {
+function applyTrayImage(payload: TrayImagePayload) {
   if (!tray) return;
-  let label = "";
-  if (payload.hasPortfolio) {
-    if (payload.mode === "percent") label = cFmtPct(payload.todayPct);
-    if (payload.mode === "total") label = cFmtMoney(payload.totalAssets, { dec: 0 });
+  let applied = false;
+  if (payload.bitmap) {
+    try {
+      const image = nativeImage.createEmpty();
+      image.addRepresentation(payload.bitmap);
+      if (!image.isEmpty()) {
+        image.setTemplateImage(false);
+        tray.setImage(image);
+        if (process.platform === "darwin") tray.setTitle("");
+        applied = true;
+      }
+    } catch (error) {
+      console.warn("Unable to apply rendered tray image, falling back to text.", error);
+    }
   }
-  if (process.platform === "darwin") tray.setTitle(label ? ` ${label}` : "");
-  tray.setToolTip(label ? `Tidal ${label}` : "Tidal 菜单栏看板");
+  if (!applied) {
+    // Fallback: monochrome glyph + plain title.
+    tray.setImage(createTrayImage());
+    if (process.platform === "darwin") tray.setTitle(payload.label ? ` ${payload.label}` : "");
+  }
+  tray.setToolTip(payload.tooltip || "Tidal 菜单栏看板");
 }
 
 function setLoginItem(enabled: boolean): boolean {
@@ -303,10 +317,19 @@ function setupIpc() {
   ipcMain.handle("system:setLaunchAtLogin", (_event, enabled: boolean) => {
     return setLoginItem(enabled);
   });
-  ipcMain.handle("tray:setSummary", (_event, payload) => {
-    updateTrayLabel(payload);
+  ipcMain.handle("tray:setImage", (_event, payload: TrayImagePayload) => {
+    applyTrayImage(payload);
   });
   ipcMain.handle("shell:openDashboard", () => shell.openExternal(DASHBOARD_URL));
+  ipcMain.handle("window:resizePopover", (_event, height: number) => {
+    if (!popoverWindow || popoverWindow.isDestroyed()) return;
+    const [width, current] = popoverWindow.getSize();
+    const { display } = displayForTray();
+    const next = Math.max(160, Math.min(Math.round(height), display.workArea.height - 12));
+    if (next === current) return;
+    popoverWindow.setSize(width, next, false);
+    if (popoverWindow.isVisible()) positionPopover(popoverWindow);
+  });
   ipcMain.handle("window:closePopover", () => {
     popoverWindow?.hide();
   });
@@ -363,7 +386,6 @@ void app.whenReady().then(async () => {
     tray.setContextMenu(trayMenu);
   }
   createPopoverWindow();
-  updateTrayLabel({ mode: "icon", totalAssets: 0, todayPct: 0, hasPortfolio: false });
   const config = await loadConfig();
   if (config.launchAtLogin) setLoginItem(true);
 });

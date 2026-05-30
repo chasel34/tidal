@@ -1,16 +1,12 @@
-import { useEffect, useState } from "react";
-import {
-  ArrowUpRight,
-  ChevronRight,
-  RefreshCw,
-  Settings,
-  Waves,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, ChevronRight, RefreshCw, Settings } from "lucide-react";
 import { INDICES } from "@shared/constants";
 import { cFmtCompact, cFmtMoney, cFmtNum, cFmtPct } from "@shared/format";
 import { moveColor } from "@shared/theme";
 import type { Palette } from "@shared/theme";
 import { AreaChart } from "./AreaChart";
+import { describeTray, renderTrayImage } from "@/lib/trayImage";
+import { useMeasure } from "@/hooks/useMeasure";
 import { usePalette } from "@/hooks/usePalette";
 import { usePortfolioSeries } from "@/hooks/usePortfolioSeries";
 import { useQuotes, useRefreshQuotes } from "@/hooks/useQuotes";
@@ -103,7 +99,9 @@ function Expand({
           style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform .15s" }}
         />
       </button>
-      {open && <div style={{ padding: "0 0 6px" }}>{children}</div>}
+      {open && (
+        <div style={{ maxHeight: 134, overflowY: "auto", padding: "0 0 6px" }}>{children}</div>
+      )}
     </div>
   );
 }
@@ -144,7 +142,9 @@ function MiniRow({
     >
       <div style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         <span style={{ fontSize: 12.5, color: P.text }}>{name}</span>
-        <span style={{ fontSize: 10, color: P.subtle, marginLeft: 6 }}>{code}</span>
+        <span style={{ fontSize: 10, color: P.subtle, marginLeft: 6, letterSpacing: "0.02em" }}>
+          {code}
+        </span>
       </div>
       <span style={{ fontSize: 12, color: P.muted, textAlign: "right" }}>{mid}</span>
       <span style={{ fontSize: 12, color, textAlign: "right" }}>{pct}</span>
@@ -205,15 +205,45 @@ export function PopoverApp() {
     ? new Date(quoteQuery.dataUpdatedAt).toLocaleTimeString("zh-CN", { hour12: false })
     : "--:--:--";
 
+  const systemTheme = useMenubarStore((state) => state.resolvedTheme);
   useEffect(() => {
-    void window.tidal.setTraySummary({
+    const descriptor = describeTray({
       mode: config.menubarMode,
-      totalAssets: summary.totalAssets,
-      todayPct: summary.todayPct,
-      hasPortfolio,
       conv: config.conv,
+      hasPortfolio,
+      systemTheme,
+      todayPct: summary.todayPct,
+      todayDelta: summary.todayDelta,
+      totalAssets: summary.totalAssets,
     });
-  }, [config.menubarMode, config.conv, hasPortfolio, summary.totalAssets, summary.todayPct]);
+    let cancelled = false;
+    void renderTrayImage(descriptor).then((bitmap) => {
+      if (cancelled) return;
+      void window.tidal.setTrayImage({ bitmap, label: descriptor.label, tooltip: descriptor.tooltip });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    config.menubarMode,
+    config.conv,
+    hasPortfolio,
+    summary.totalAssets,
+    summary.todayPct,
+    summary.todayDelta,
+    systemTheme,
+  ]);
+
+  // Shrink-wrap the native popover window to the rendered content height so
+  // there is no empty panel below the action menu.
+  const [rootRef, rootSize] = useMeasure<HTMLDivElement>();
+  const lastSentHeight = useRef(0);
+  useEffect(() => {
+    const height = Math.ceil(rootSize.height);
+    if (height <= 0 || height === lastSentHeight.current) return;
+    lastSentHeight.current = height;
+    void window.tidal.resizePopover?.(height);
+  }, [rootSize.height]);
 
   const doRefresh = async () => {
     if (refreshing) return;
@@ -232,9 +262,9 @@ export function PopoverApp() {
 
   return (
     <div
+      ref={rootRef}
       style={{
         width: "100%",
-        height: "100%",
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
@@ -248,18 +278,16 @@ export function PopoverApp() {
           : "0 16px 50px rgba(40,30,20,0.2), 0 2px 6px rgba(40,30,20,0.08)",
       }}
     >
-      <div style={{ padding: "14px 10px 4px", flex: 1, minHeight: 0, overflow: "hidden" }}>
-        <div style={{ padding: "10px 14px 2px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Waves size={16} color={P.accent} />
-            <div style={{ fontSize: 10.5, color: P.subtle }}>总资产</div>
-          </div>
+      <div style={{ padding: "4px 0" }}>
+        <div style={{ padding: "12px 14px 2px" }}>
+          <div style={{ fontSize: 10.5, color: P.subtle }}>总资产</div>
           <div
             style={{
               fontSize: 26,
               color: P.text,
               fontWeight: 500,
               marginTop: 2,
+              letterSpacing: "-0.01em",
               fontVariantNumeric: "tabular-nums",
             }}
           >
@@ -271,7 +299,7 @@ export function PopoverApp() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 10px", padding: "10px 14px 8px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 10px", padding: "12px 14px 10px" }}>
           <StatCell P={P} label="持仓市值" value={cFmtMoney(summary.marketValue, { dec: 0 })} />
           <StatCell P={P} label="现金" value={cFmtMoney(summary.cash, { dec: 0 })} />
           <StatCell P={P} label="累计盈亏" color={move(summary.totalGain)} value={cFmtPct(summary.totalGainPct)} />
@@ -284,7 +312,8 @@ export function PopoverApp() {
               P={P}
               series={series.data?.series ?? []}
               labels={series.data?.labels ?? []}
-              color={trendColor}
+              color={P.accent}
+              formatValue={(value) => cFmtMoney(value, { dec: 0 })}
             />
             <div style={{ display: "flex", gap: 3, padding: "0 12px", justifyContent: "center" }}>
               {periods.map((period) => (
@@ -414,7 +443,7 @@ export function PopoverApp() {
           flexShrink: 0,
         }}
       >
-        <span>实时延迟约 15 秒</span>
+        <span>实时延迟 15 秒</span>
         <span style={{ fontVariantNumeric: "tabular-nums" }}>更新于 {asOf}</span>
       </div>
     </div>

@@ -32,6 +32,25 @@ export interface SystemState {
   launchAtLogin: boolean;
 }
 
+export interface TrayImageBitmap {
+  /** PNG data URL of the rendered menu-bar item. */
+  dataURL: string;
+  /** Logical (point) dimensions of the image. */
+  width: number;
+  height: number;
+  /** Device pixel ratio the bitmap was rendered at. */
+  scaleFactor: number;
+}
+
+export interface TrayImagePayload {
+  /** Rendered bitmap, or null to fall back to a monochrome glyph + text title. */
+  bitmap: TrayImageBitmap | null;
+  /** Plain-text label, used for the title fallback when no bitmap is available. */
+  label: string;
+  /** Tooltip shown on hover. */
+  tooltip: string;
+}
+
 export interface TidalApi {
   getView: () => Promise<"popover" | "settings">;
   loadConfig: () => Promise<MenubarConfig>;
@@ -41,14 +60,9 @@ export interface TidalApi {
   onConfigChanged: (callback: (config: MenubarConfig) => void) => () => void;
   getSystemState: () => Promise<SystemState>;
   setLaunchAtLogin: (enabled: boolean) => Promise<boolean>;
-  setTraySummary: (payload: {
-    mode: MenubarConfig["menubarMode"];
-    totalAssets: number;
-    todayPct: number;
-    hasPortfolio: boolean;
-    conv: MenubarConfig["conv"];
-  }) => Promise<void>;
+  setTrayImage: (payload: TrayImagePayload) => Promise<void>;
   openDashboard: () => Promise<void>;
+  resizePopover: (height: number) => Promise<void>;
   closePopover: () => Promise<void>;
   closeSettings: () => Promise<void>;
   openSettings: () => Promise<void>;

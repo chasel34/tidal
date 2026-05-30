@@ -419,7 +419,7 @@ export function SettingsApp() {
               </Card>
               <GroupLabel P={P}>预览</GroupLabel>
               <Card P={P}>
-                {[{ n: "上涨示例", c: "000001", v: 0.85 }, { n: "下跌示例", c: "000002", v: -1.42 }].map((r, i) => (
+                {[{ n: "贵州茅台", c: "600519", v: 0.85 }, { n: "宁德时代", c: "300750", v: -1.42 }].map((r, i) => (
                   <Row key={r.c} label={r.n} sub={r.c} P={P} last={i === 1}>
                     <span style={{ fontSize: 14, color: move(r.v), fontVariantNumeric: "tabular-nums" }}>{cFmtPct(r.v)}</span>
                   </Row>
