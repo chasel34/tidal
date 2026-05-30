@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@/store/useStore";
 import { apiQuotes } from "@/lib/api-client";
 import { INDICES, QUOTE_POLL_MS } from "@/lib/constants";
-import type { IndexQuote, Instrument } from "@/lib/types";
+import type { IndexQuote, Instrument, Quote } from "@/lib/types";
 
 /** Polls live quotes for holdings + watch + indices and feeds them into the store.
  *  Returns derived index quotes for the sidebar. */
@@ -23,41 +24,47 @@ export function useQuotes(): IndexQuote[] {
     return [...map.values()];
   }, [holdings, watch]);
 
-  // stable signature for the effect dependency
+  // Stable signature for query key so it only changes when instrument set changes
   const sig = useMemo(
-    () => instruments.map((i) => i.code).sort().join(","),
+    () =>
+      instruments
+        .map((i) => `${i.code}|${i.market}|${i.category}|${i.type}`)
+        .sort()
+        .join(","),
     [instruments]
   );
+
   const instRef = useRef(instruments);
   useEffect(() => {
     instRef.current = instruments;
   }, [instruments]);
 
+  const queryClient = useQueryClient();
+
+  const { data } = useQuery<Quote[]>({
+    queryKey: ["quotes", sig],
+    queryFn: () => apiQuotes(instRef.current),
+    refetchInterval: QUOTE_POLL_MS,
+    enabled: hydrated && instruments.length > 0,
+    staleTime: 0,
+  });
+
+  // Bridge: write fetched quotes into Zustand store (v5 has no onSuccess)
   useEffect(() => {
-    if (!hydrated) return;
-    let cancelled = false;
+    if (!data?.length) return;
+    setQuotes((prev) => {
+      const next = { ...prev };
+      for (const q of data) next[q.code] = q;
+      return next;
+    });
+  }, [data, setQuotes]);
 
-    const tick = async () => {
-      try {
-        const qs = await apiQuotes(instRef.current);
-        if (cancelled || !qs.length) return;
-        setQuotes((prev) => {
-          const next = { ...prev };
-          for (const q of qs) next[q.code] = q;
-          return next;
-        });
-      } catch {
-        /* ignore transient errors */
-      }
-    };
-
-    tick();
-    const id = setInterval(tick, QUOTE_POLL_MS);
+  // On unmount or when instruments change, cancel any in-flight refetch
+  useEffect(() => {
     return () => {
-      cancelled = true;
-      clearInterval(id);
+      queryClient.cancelQueries({ queryKey: ["quotes"] });
     };
-  }, [hydrated, sig, setQuotes]);
+  }, [sig, queryClient]);
 
   return useMemo<IndexQuote[]>(
     () =>

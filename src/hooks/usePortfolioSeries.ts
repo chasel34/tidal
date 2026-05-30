@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@/store/useStore";
-import { apiFundNav, apiKline, apiMinute } from "@/lib/api-client";
 import { PERIODS } from "@/lib/constants";
 import { hasKlineMarket } from "@/lib/client-util";
+import { klineOptions, minuteOptions, fundNavOptions } from "@/lib/query-options";
 import type { HoldingItem, Period } from "@/lib/types";
 
 export interface SeriesResult {
@@ -22,12 +22,12 @@ export function usePortfolioSeries(period: Period): SeriesResult {
   const cash = useStore((state) => state.cash);
   const quotes = useStore((state) => state.quotes);
   const hydrated = useStore((state) => state.hydrated);
-  const [result, setResult] = useState<SeriesResult>(EMPTY);
+  const queryClient = useQueryClient();
 
   // signature so we only refetch when relevant inputs change. Quote prices are
   // included because non-kline holdings (funds/hk/us) derive their whole series
-  // from the live quote, which arrives after the first poll. apiKline is cached
-  // so recomputing on a quote tick is cheap.
+  // from the live quote, which arrives after the first poll. fetchQuery uses the
+  // shared TanStack Query cache so recomputing on a quote tick is cheap.
   const sig =
     period +
     "|" +
@@ -41,59 +41,53 @@ export function usePortfolioSeries(period: Period): SeriesResult {
       .sort()
       .join(",");
 
-  useEffect(() => {
-    if (!hydrated) return;
-    if (!holdings.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setResult(EMPTY);
-      return;
-    }
-    const snapshotHoldings = holdings;
-    const snapshotCash = cash;
-    const snapshotQuotes = quotes;
-    let cancelled = false;
-    setResult((r) => ({ ...r, loading: true }));
-
-    const run = async () => {
-      try {
-        const res =
-          period === "1D"
-            ? await buildIntraday(snapshotHoldings, snapshotCash, snapshotQuotes)
-            : await buildDaily(snapshotHoldings, snapshotCash, snapshotQuotes, period);
-        if (!cancelled) setResult({ ...res, loading: false });
-      } catch {
-        if (!cancelled) setResult({ ...EMPTY, loading: false });
+  const { data, isLoading } = useQuery({
+    queryKey: ["portfolioSeries", sig] as const,
+    queryFn: async () => {
+      const snapshotQuotes = quotes;
+      if (period === "1D") {
+        return buildIntraday(holdings, cash, snapshotQuotes, queryClient);
       }
-    };
-    run();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, sig]);
+      return buildDaily(holdings, cash, snapshotQuotes, period, queryClient);
+    },
+    enabled: hydrated && holdings.length > 0,
+    staleTime: 60_000,
+  });
 
-  return result;
+  if (!hydrated || !holdings.length) return EMPTY;
+
+  return {
+    series: data?.series ?? [],
+    labels: data?.labels ?? [],
+    loading: isLoading,
+  };
 }
 
 type QuoteMap = Record<string, { price: number }>;
+type QC = ReturnType<typeof useQueryClient>;
 
 async function buildDaily(
   holdings: HoldingItem[],
   cash: number,
   quotes: QuoteMap,
-  period: Exclude<Period, "1D">
+  period: Exclude<Period, "1D">,
+  queryClient: QC
 ): Promise<{ series: number[]; labels: string[] }> {
   const take = PERIODS[period];
   const perHolding = await Promise.all(
     holdings.map(async (h) => {
       if (hasKlineMarket(h.instrument.market)) {
-        const pts = await apiKline(h.instrument.code).catch(() => []);
+        const pts = await queryClient
+          .fetchQuery(klineOptions(h.instrument.code))
+          .catch(() => []);
         const map = new Map<string, number>();
         pts.forEach((p) => map.set(p.date, p.close));
         return { h, map: map.size ? map : null };
       }
       if (h.instrument.market?.toLowerCase() === "jj") {
-        const pts = await apiFundNav(h.instrument.code).catch(() => []);
+        const pts = await queryClient
+          .fetchQuery(fundNavOptions(h.instrument.code))
+          .catch(() => []);
         const map = new Map<string, number>();
         pts.forEach((p) => map.set(p.date, p.nav));
         return { h, map: map.size ? map : null };
@@ -128,9 +122,8 @@ function closeAtOrBefore(
   date: string,
   fallback: number
 ): number {
-  if (!map) return fallback; // funds / hk / us: flat current price
+  if (!map) return fallback;
   if (map.has(date)) return map.get(date)!;
-  // carry forward last known close on or before `date`
   let last = 0;
   for (const d of allDates) {
     if (d > date) break;
@@ -142,13 +135,16 @@ function closeAtOrBefore(
 async function buildIntraday(
   holdings: HoldingItem[],
   cash: number,
-  quotes: QuoteMap
+  quotes: QuoteMap,
+  queryClient: QC
 ): Promise<{ series: number[]; labels: string[] }> {
   const perHolding = await Promise.all(
     holdings.map(async (h) => {
       if (!hasKlineMarket(h.instrument.market))
         return { h, map: null as Map<string, number> | null };
-      const pts = await apiMinute(h.instrument.code).catch(() => []);
+      const pts = await queryClient
+        .fetchQuery(minuteOptions(h.instrument.code))
+        .catch(() => []);
       const map = new Map<string, number>();
       pts.forEach((p) => map.set(p.time, p.close));
       return { h, map };
@@ -173,7 +169,6 @@ async function buildIntraday(
     return { series: [total, total], labels: ["开盘", "当前"] };
   }
 
-  // carry-forward each holding's last known close by timestamp
   const series = times.map((t) => {
     let total = cash;
     for (const { h, map } of perHolding) {

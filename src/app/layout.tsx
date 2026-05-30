@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { StoreProvider } from "@/store/useStore";
+import { QueryProvider } from "@/lib/QueryProvider";
 
 export const metadata: Metadata = {
   title: "我的资产看板 · Tidal",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="h-full antialiased" translate="no">
       <body className="min-h-full">
-        <StoreProvider>{children}</StoreProvider>
+        <QueryProvider>
+          <StoreProvider>{children}</StoreProvider>
+        </QueryProvider>
       </body>
     </html>
   );
