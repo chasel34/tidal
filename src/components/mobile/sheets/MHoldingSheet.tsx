@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useStore } from "@/store/useStore";
+import { useState } from "react";
+import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { useSearch } from "@/hooks/useSearch";
 import { cMove } from "@/lib/format";
 import { MSheet } from "@/components/mobile/ui/MSheet";
@@ -16,8 +16,10 @@ interface MHoldingSheetProps {
 }
 
 export function MHoldingSheet({ P, onClose, editCode }: MHoldingSheetProps) {
-  const store = useStore();
-  const { holdingsFull, addHolding, updateHolding, removeHolding } = store;
+  const addHolding = useStore((state) => state.addHolding);
+  const updateHolding = useStore((state) => state.updateHolding);
+  const removeHolding = useStore((state) => state.removeHolding);
+  const { holdingsFull } = usePortfolioDerived();
 
   const existing = editCode ? holdingsFull.find((h) => h.code === editCode) : undefined;
 
@@ -28,14 +30,6 @@ export function MHoldingSheet({ P, onClose, editCode }: MHoldingSheetProps) {
   const [cost, setCost] = useState(existing ? existing.cost.toString() : "");
   const [query, setQuery] = useState("");
   const { results, loading } = useSearch(query);
-
-  useEffect(() => {
-    if (existing) {
-      setPicked({ code: existing.code, name: existing.name, market: existing.market, category: existing.category, type: existing.type });
-      setShares(existing.shares.toString());
-      setCost(existing.cost.toString());
-    }
-  }, [existing]);
 
   const sharesNum = parseFloat(shares) || 0;
   const costNum = parseFloat(cost) || 0;
@@ -89,7 +83,7 @@ export function MHoldingSheet({ P, onClose, editCode }: MHoldingSheetProps) {
               >
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: P.text }}>{r.name}</div>
-                  <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{r.code} · {r.market} · {store.typeLabel(r)}</div>
+                  <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{r.code} · {r.market} · {typeLabel(r)}</div>
                 </div>
               </div>
             ))}
@@ -101,7 +95,7 @@ export function MHoldingSheet({ P, onClose, editCode }: MHoldingSheetProps) {
           <div style={{ background: P.chipBg, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: P.text }}>{picked.name}</div>
-              <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{picked.code} · {store.typeLabel(picked)}</div>
+              <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{picked.code} · {typeLabel(picked)}</div>
             </div>
             {!editCode && (
               <button onClick={() => setPicked(null)} style={{ background: "none", border: "none", color: P.accent, fontSize: 13, cursor: "pointer" }}>

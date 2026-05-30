@@ -13,13 +13,14 @@ import { HoldingModal } from "@/components/pc/modals/HoldingModal";
 import type { ModalState } from "@/components/pc/panes/types";
 
 export function TidalApp() {
-  const store = useStore();
+  const hydrated = useStore((state) => state.hydrated);
+  const tab = useStore((state) => state.tab);
   const P = usePalette();
   const indices = useQuotes();
   const [modal, setModal] = useState<ModalState>(null);
 
   // avoid hydration flash: render plain background until local state is loaded
-  if (!store.hydrated) {
+  if (!hydrated) {
     return <div style={{ width: "100%", height: "100vh", background: P.bg }} />;
   }
 
@@ -41,9 +42,9 @@ export function TidalApp() {
 
       <main style={{ overflowY: "auto", overflowX: "hidden" }}>
         <div style={{ padding: "30px 40px 48px", maxWidth: 1080, margin: "0 auto" }}>
-          {store.tab === "today" && <TodayPane P={P} openModal={setModal} />}
-          {store.tab === "holdings" && <HoldingsPane P={P} openModal={setModal} />}
-          {store.tab === "watch" && <WatchPane P={P} openModal={setModal} />}
+          {tab === "today" && <TodayPane P={P} openModal={setModal} />}
+          {tab === "holdings" && <HoldingsPane P={P} openModal={setModal} />}
+          {tab === "watch" && <WatchPane P={P} openModal={setModal} />}
         </div>
       </main>
 

@@ -29,7 +29,11 @@ function SideLabel({ children, P }: { children: React.ReactNode; P: Palette }) {
 }
 
 export function Sidebar({ P, indices }: { P: Palette; indices: IndexQuote[] }) {
-  const store = useStore();
+  const theme = useStore((state) => state.theme);
+  const setTheme = useStore((state) => state.setTheme);
+  const tab = useStore((state) => state.tab);
+  const setTab = useStore((state) => state.setTab);
+  const resetAll = useStore((state) => state.resetAll);
   return (
     <aside
       style={{
@@ -68,17 +72,17 @@ export function Sidebar({ P, indices }: { P: Palette; indices: IndexQuote[] }) {
           </div>
           <div style={{ fontSize: 14.5, color: P.text }}>我的看板</div>
         </div>
-        <ThemeToggle theme={store.theme} setTheme={store.setTheme} P={P} />
+        <ThemeToggle theme={theme} setTheme={setTheme} P={P} />
       </div>
 
       <div>
         <SideLabel P={P}>导航</SideLabel>
         {TABS.map((t) => {
-          const active = store.tab === t.id;
+          const active = tab === t.id;
           return (
             <button
               key={t.id}
-              onClick={() => store.setTab(t.id)}
+              onClick={() => setTab(t.id)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -112,7 +116,7 @@ export function Sidebar({ P, indices }: { P: Palette; indices: IndexQuote[] }) {
       <div>
         <SideLabel P={P}>大盘</SideLabel>
         {indices.map((idx) => {
-          const c = cMove(idx.pct, store.theme);
+          const c = cMove(idx.pct, theme);
           return (
             <div
               key={idx.code}
@@ -149,7 +153,7 @@ export function Sidebar({ P, indices }: { P: Palette; indices: IndexQuote[] }) {
         </div>
         <button
           onClick={() => {
-            if (confirm("确定要清空所有持仓与自选吗？")) store.resetAll();
+            if (confirm("确定要清空所有持仓与自选吗？")) resetAll();
           }}
           style={{
             background: "transparent",

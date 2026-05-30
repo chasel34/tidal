@@ -5,7 +5,7 @@ import type { Palette } from "@/lib/theme";
 import type { Instrument, Quote } from "@/lib/types";
 import { cFmtMoney, cFmtNum, cFmtPct, cMove } from "@/lib/format";
 import { apiQuotes } from "@/lib/api-client";
-import { useStore } from "@/store/useStore";
+import { typeLabel, unitLabel, useStore } from "@/store/useStore";
 import { useSearch } from "@/hooks/useSearch";
 import { Modal } from "@/components/shared/ui/Modal";
 import { SearchField } from "@/components/shared/ui/SearchField";
@@ -20,10 +20,14 @@ export function HoldingModal({
   onClose: () => void;
   editCode?: string;
 }) {
-  const store = useStore();
+  const holdings = useStore((state) => state.holdings);
+  const quotes = useStore((state) => state.quotes);
+  const addHolding = useStore((state) => state.addHolding);
+  const updateHolding = useStore((state) => state.updateHolding);
+  const removeHolding = useStore((state) => state.removeHolding);
   const editing = !!editCode;
   const existing = editing
-    ? store.holdings.find((h) => h.instrument.code === editCode)
+    ? holdings.find((h) => h.instrument.code === editCode)
     : null;
 
   const [q, setQ] = useState("");
@@ -34,7 +38,7 @@ export function HoldingModal({
   const [shares, setShares] = useState(existing ? String(existing.shares) : "");
   const [cost, setCost] = useState(existing ? String(existing.cost) : "");
   const [pickedQuote, setPickedQuote] = useState<Quote | null>(
-    picked ? store.quotes[picked.code] ?? null : null
+    picked ? quotes[picked.code] ?? null : null
   );
 
   // fetch live price for the picked instrument
@@ -44,7 +48,7 @@ export function HoldingModal({
       setPickedQuote(null);
       return;
     }
-    const cached = store.quotes[picked.code];
+    const cached = quotes[picked.code];
     if (cached) setPickedQuote(cached);
     let cancelled = false;
     apiQuotes([picked])
@@ -63,7 +67,7 @@ export function HoldingModal({
   const pick = (inst: Instrument) => {
     setPicked(inst);
     if (!cost) {
-      const cached = store.quotes[inst.code];
+      const cached = quotes[inst.code];
       if (cached) setCost(String(cached.price));
     }
   };
@@ -74,12 +78,12 @@ export function HoldingModal({
 
   const save = () => {
     if (!canSave || !picked) return;
-    if (editing) store.updateHolding(picked.code, sharesNum, costNum);
-    else store.addHolding(picked, sharesNum, costNum);
+    if (editing) updateHolding(picked.code, sharesNum, costNum);
+    else addHolding(picked, sharesNum, costNum);
     onClose();
   };
 
-  const unit = picked ? store.unitLabel(picked) : "股";
+  const unit = picked ? unitLabel(picked) : "股";
 
   const preview = useMemo(() => {
     if (!(sharesNum > 0 && costNum > 0 && price > 0)) return null;
@@ -133,7 +137,7 @@ export function HoldingModal({
                 <div>
                   <div style={{ fontSize: 14, color: P.text }}>{inst.name}</div>
                   <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>
-                    {inst.code} · {store.typeLabel(inst)}
+                    {inst.code} · {typeLabel(inst)}
                   </div>
                 </div>
                 <div style={{ textAlign: "right", color: P.subtle, fontSize: 12 }}>
@@ -156,7 +160,7 @@ export function HoldingModal({
             <div>
               <div style={{ fontSize: 16, color: P.text }}>{picked.name}</div>
               <div style={{ fontSize: 12, color: P.subtle, marginTop: 2 }}>
-                {picked.code} · {store.typeLabel(picked)} ·{" "}
+                {picked.code} · {typeLabel(picked)} ·{" "}
                 {price > 0 ? "现价 ¥" + cFmtNum(price) : "现价 —"}
               </div>
             </div>
@@ -226,7 +230,7 @@ export function HoldingModal({
             {editing ? (
               <button
                 onClick={() => {
-                  store.removeHolding(picked.code);
+                  removeHolding(picked.code);
                   onClose();
                 }}
                 style={tidalBtn(P, "danger")}

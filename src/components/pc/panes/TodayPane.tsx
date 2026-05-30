@@ -4,40 +4,45 @@ import { useMemo } from "react";
 import type { Palette } from "@/lib/theme";
 import { allocColors } from "@/lib/theme";
 import { cFmtCompact, cFmtMoney, cFmtPct, cMove } from "@/lib/format";
-import { useStore } from "@/store/useStore";
+import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePortfolioSeries } from "@/hooks/usePortfolioSeries";
 import { useDailyCloses } from "@/hooks/useDailyCloses";
 import { Donut } from "@/components/shared/charts/Donut";
 import { AreaChart } from "@/components/shared/charts/AreaChart";
 import { Spark } from "@/components/shared/charts/Spark";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
-import type { Period, HoldingFull, WatchFull, Instrument } from "@/lib/types";
+import type { Period, HoldingFull, WatchFull, Instrument, Theme } from "@/lib/types";
 import type { PaneProps } from "./types";
 
 const RANGES: Period[] = ["1D", "1W", "1M", "3M", "1Y"];
 
 export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
-  const store = useStore();
-  const { summary, period, setPeriod } = store;
+  const period = useStore((state) => state.period);
+  const setPeriod = useStore((state) => state.setPeriod);
+  const theme = useStore((state) => state.theme);
+  const holdings = useStore((state) => state.holdings);
+  const watch = useStore((state) => state.watch);
+  const setTab = useStore((state) => state.setTab);
+  const { summary, allocation, sortedHoldings, watchFull } = usePortfolioDerived();
   const { series, labels } = usePortfolioSeries(period);
 
   const up = summary.todayDelta >= 0;
-  const moveC = cMove(summary.todayDelta, store.theme);
+  const moveC = cMove(summary.todayDelta, theme);
   const colors = allocColors(P.isDark);
-  const totalAlloc = store.allocation.reduce((s, x) => s + x.value, 0) || 1;
+  const totalAlloc = allocation.reduce((s, x) => s + x.value, 0) || 1;
 
   const miniInstruments = useMemo<Instrument[]>(() => {
     const codes = new Map<string, Instrument>();
-    store.sortedHoldings.slice(0, 5).forEach((h) => codes.set(h.code, h));
-    [...store.watchFull]
+    sortedHoldings.slice(0, 5).forEach((h) => codes.set(h.code, h));
+    [...watchFull]
       .sort((a, b) => b.todayPct - a.todayPct)
       .slice(0, 5)
       .forEach((w) => codes.set(w.code, w));
     return [...codes.values()];
-  }, [store.sortedHoldings, store.watchFull]);
+  }, [sortedHoldings, watchFull]);
   const sparks = useDailyCloses(miniInstruments);
 
-  if (!store.holdings.length && !store.watch.length) {
+  if (!holdings.length && !watch.length) {
     return (
       <EmptyState
         P={P}
@@ -94,7 +99,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
             <span style={{ fontSize: 13, color: P.muted }}>
               账户总额 {cFmtMoney(summary.totalAssets)}
             </span>
-            <span style={{ fontSize: 13, color: cMove(summary.totalGain, store.theme) }}>
+            <span style={{ fontSize: 13, color: cMove(summary.totalGain, theme) }}>
               累计 {cFmtPct(summary.totalGainPct)}
             </span>
           </div>
@@ -112,7 +117,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
           }}
         >
           <div style={{ position: "relative", width: 110, height: 110 }}>
-            <Donut segments={store.allocation} size={110} thickness={13} colors={colors} />
+            <Donut segments={allocation} size={110} thickness={13} colors={colors} />
             <div
               style={{
                 position: "absolute",
@@ -130,7 +135,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-            {store.allocation.map((seg, i) => (
+            {allocation.map((seg, i) => (
               <div
                 key={seg.label}
                 style={{
@@ -155,7 +160,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
                 </span>
               </div>
             ))}
-            {store.allocation.length === 0 && (
+            {allocation.length === 0 && (
               <span style={{ color: P.subtle, fontSize: 12 }}>暂无持仓</span>
             )}
           </div>
@@ -228,7 +233,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
               fontSize: 13,
             }}
           >
-            {store.holdings.length ? "加载走势中…" : "添加持仓后查看资产走势"}
+            {holdings.length ? "加载走势中…" : "添加持仓后查看资产走势"}
           </div>
         )}
       </div>
@@ -238,20 +243,22 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
         <MiniList
           title="持仓 · 今日表现"
           actionLabel="全部 →"
-          onAction={() => store.setTab("holdings")}
+          onAction={() => setTab("holdings")}
           P={P}
-          rows={store.sortedHoldings.slice(0, 5)}
+          rows={sortedHoldings.slice(0, 5)}
           sparks={sparks}
           emptyText="暂无持仓"
+          theme={theme}
         />
         <MiniList
           title="自选 · 今日变动"
           actionLabel="全部 →"
-          onAction={() => store.setTab("watch")}
+          onAction={() => setTab("watch")}
           P={P}
-          rows={[...store.watchFull].sort((a, b) => b.todayPct - a.todayPct).slice(0, 5)}
+          rows={[...watchFull].sort((a, b) => b.todayPct - a.todayPct).slice(0, 5)}
           sparks={sparks}
           emptyText="暂无自选"
+          theme={theme}
         />
       </div>
     </div>
@@ -266,6 +273,7 @@ function MiniList({
   P,
   sparks,
   emptyText,
+  theme,
 }: {
   title: string;
   actionLabel: string;
@@ -274,8 +282,8 @@ function MiniList({
   P: Palette;
   sparks: Record<string, number[]>;
   emptyText: string;
+  theme: Theme;
 }) {
-  const store = useStore();
   return (
     <div>
       <div
@@ -307,7 +315,7 @@ function MiniList({
           <div style={{ color: P.subtle, fontSize: 13, padding: "12px 2px" }}>{emptyText}</div>
         )}
         {rows.map((r, i) => {
-          const c = cMove(r.todayPct, store.theme);
+          const c = cMove(r.todayPct, theme);
           const spark = sparks[r.code];
           return (
             <div
@@ -324,7 +332,7 @@ function MiniList({
               <div>
                 <div style={{ fontSize: 14, color: P.text, whiteSpace: "nowrap" }}>{r.name}</div>
                 <div style={{ fontSize: 11, color: P.subtle, marginTop: 1, letterSpacing: "0.04em" }}>
-                  {r.code} · {store.typeLabel(r)}
+                  {r.code} · {typeLabel(r)}
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "center" }}>

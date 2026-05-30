@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useStore } from "@/store/useStore";
+import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { useFundProfile } from "@/hooks/useFundProfile";
 import { cFmtMoney, cFmtNum, cFmtPct, cMove } from "@/lib/format";
@@ -49,10 +49,11 @@ function MAllocBar({ segments, P }: { segments: FundAllocSegment[]; P: ReturnTyp
   );
 }
 
-export function MFundDetail({ code, onBack, openSheet }: MFundDetailProps) {
-  const store = useStore();
+export function MFundDetail({ code, onBack: _onBack, openSheet }: MFundDetailProps) {
   const P = usePalette();
-  const { holdingsFull, watchFull, quotes, theme } = store;
+  const theme = useStore((state) => state.theme);
+  const quotes = useStore((state) => state.quotes);
+  const { holdingsFull, watchFull } = usePortfolioDerived();
   const { profile, loading: profileLoading } = useFundProfile(code);
   const [navPeriod, setNavPeriod] = useState("3M");
 
@@ -79,7 +80,7 @@ export function MFundDetail({ code, onBack, openSheet }: MFundDetailProps) {
     <div style={{ padding: "0 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Header */}
       <div style={{ padding: "12px 0 0" }}>
-        {inst && <div style={{ fontSize: 11, color: P.subtle, marginBottom: 4 }}>{inst.code} · {store.typeLabel(inst)}</div>}
+        {inst && <div style={{ fontSize: 11, color: P.subtle, marginBottom: 4 }}>{inst.code} · {typeLabel(inst)}</div>}
       </div>
 
       {/* Estimate card */}

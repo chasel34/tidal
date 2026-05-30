@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { useStore } from "@/store/useStore";
+import { useCallback, useRef, useState } from "react";
+import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { useDailyCloses } from "@/hooks/useDailyCloses";
 import { cFmtPct, cMove } from "@/lib/format";
@@ -25,23 +25,23 @@ const SORT_CHIPS: { key: WatchSortKey; label: string }[] = [
 
 function MSwipeRow({ children, onDelete, P }: { children: React.ReactNode; onDelete: () => void; P: ReturnType<typeof usePalette> }) {
   const [dx, setDx] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
-  const dragging = useRef(false);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     startX.current = e.clientX;
-    dragging.current = true;
+    setIsDragging(true);
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current) return;
+    if (!isDragging) return;
     const diff = e.clientX - startX.current;
     setDx(Math.min(0, Math.max(-84, diff)));
-  }, []);
+  }, [isDragging]);
 
   const onPointerUp = useCallback(() => {
-    dragging.current = false;
+    setIsDragging(false);
     setDx((prev) => (prev < -42 ? -84 : 0));
   }, []);
 
@@ -76,7 +76,7 @@ function MSwipeRow({ children, onDelete, P }: { children: React.ReactNode; onDel
         onPointerCancel={onPointerUp}
         style={{
           transform: `translateX(${dx}px)`,
-          transition: dragging.current ? "none" : "transform .2s ease",
+          transition: isDragging ? "none" : "transform .2s ease",
           background: P.panel,
           position: "relative",
           zIndex: 1,
@@ -90,9 +90,12 @@ function MSwipeRow({ children, onDelete, P }: { children: React.ReactNode; onDel
 }
 
 export function MWatch({ goDetail, openSheet }: MWatchProps) {
-  const store = useStore();
   const P = usePalette();
-  const { sortedWatch, sortW, toggleSortW, theme, removeWatch, watchFull } = store;
+  const theme = useStore((state) => state.theme);
+  const sortW = useStore((state) => state.sortW);
+  const toggleSortW = useStore((state) => state.toggleSortW);
+  const removeWatch = useStore((state) => state.removeWatch);
+  const { sortedWatch, watchFull } = usePortfolioDerived();
   const sparks = useDailyCloses(watchFull);
 
   if (sortedWatch.length === 0) {
@@ -167,7 +170,7 @@ export function MWatch({ goDetail, openSheet }: MWatchProps) {
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: P.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.name}</div>
-                <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{w.code} · {w.market} · {store.typeLabel(w)}</div>
+                <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{w.code} · {w.market} · {typeLabel(w)}</div>
               </div>
               <Spark data={sparks[w.code] || []} width={48} height={18} color={cMove(w.todayPct, theme)} />
               <div style={{ textAlign: "right", marginLeft: 12, minWidth: 64 }}>

@@ -244,10 +244,11 @@ export function FundDetail({
   P: Palette;
   openModal: (m: ModalState) => void;
 }) {
-  const store = useStore();
+  const quotes = useStore((state) => state.quotes);
+  const theme = useStore((state) => state.theme);
   const [period, setPeriod] = useState<DetailPeriod>("3M");
   const { profile, loading } = useFundProfile(h.code);
-  const q = store.quotes[h.code];
+  const q = quotes[h.code];
 
   const estimated = !!q?.estimated;
   // headline NAV: estimate while unsettled, else effective settled price
@@ -267,7 +268,7 @@ export function FundDetail({
   const navSeries = (profile?.navHistory ?? []).slice(-take);
   const series = navSeries.map((p) => p.nav);
   const labels = navSeries.map((p) => p.date.slice(5));
-  const gainC = cMove(h.gainAbs, store.theme);
+  const gainC = cMove(h.gainAbs, theme);
 
   return (
     <div
@@ -480,7 +481,7 @@ export function FundDetail({
                     {s.code}
                   </div>
                 </div>
-                <span style={{ textAlign: "right", color: cMove(s.todayPct, store.theme) }}>
+                <span style={{ textAlign: "right", color: cMove(s.todayPct, theme) }}>
                   {cFmtPct(s.todayPct)}
                 </span>
               </div>

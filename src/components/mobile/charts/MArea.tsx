@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { Palette } from "@/lib/theme";
 import { cFmtCompact } from "@/lib/format";
 
@@ -50,7 +50,8 @@ export function MArea({
   const fmtY = formatY ?? cFmtCompact;
   const fmtVal = formatValue ?? ((v: number) => v.toFixed(2));
 
-  const gradId = useMemo(() => "m" + Math.random().toString(36).slice(2, 7), []);
+  const rawId = useId();
+  const gradId = "m" + rawId.replace(/:/g, "");
 
   const pad = { top: 16, right: 14, bottom: 22, left: 46 };
   const innerW = width - pad.left - pad.right;
@@ -78,11 +79,6 @@ export function MArea({
     return { min, max, points, linePath, areaPath, ticks, xStep, yScale };
   }, [series, innerW, innerH, baseline, pad.top, pad.left]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    updateHover(e);
-  }, [geo]);
-
   const updateHover = useCallback((e: React.PointerEvent) => {
     if (!geo || innerW <= 0) return;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -90,6 +86,11 @@ export function MArea({
     const idx = Math.round(x / geo.xStep);
     setHoverIdx(Math.max(0, Math.min(series.length - 1, idx)));
   }, [geo, innerW, series.length, pad.left]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    updateHover(e);
+  }, [updateHover]);
 
   const clearHover = useCallback(() => setHoverIdx(null), []);
 

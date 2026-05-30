@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useStore } from "@/store/useStore";
+import { typeLabel, useStore } from "@/store/useStore";
 import { useSearch } from "@/hooks/useSearch";
 import { cFmtPct, cMove } from "@/lib/format";
 import { MSheet } from "@/components/mobile/ui/MSheet";
@@ -14,10 +14,12 @@ interface MAddWatchSheetProps {
 }
 
 export function MAddWatchSheet({ P, onClose }: MAddWatchSheetProps) {
-  const store = useStore();
+  const watch = useStore((state) => state.watch);
+  const quotes = useStore((state) => state.quotes);
+  const theme = useStore((state) => state.theme);
+  const addWatch = useStore((state) => state.addWatch);
   const [query, setQuery] = useState("");
   const { results, loading } = useSearch(query);
-  const { watch, quotes, theme } = store;
 
   const watchCodes = new Set(watch.map((w) => w.code));
 
@@ -37,7 +39,7 @@ export function MAddWatchSheet({ P, onClose }: MAddWatchSheetProps) {
             <div key={r.code} style={{ display: "flex", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${P.lineSoft}` }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: P.text }}>{r.name}</div>
-                <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{r.code} · {r.market} · {store.typeLabel(r)}</div>
+                <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{r.code} · {r.market} · {typeLabel(r)}</div>
               </div>
               {q && (
                 <div style={{ textAlign: "right", marginRight: 12 }}>
@@ -46,7 +48,7 @@ export function MAddWatchSheet({ P, onClose }: MAddWatchSheetProps) {
                 </div>
               )}
               <button
-                onClick={() => { if (!inWatch) store.addWatch(r); }}
+                onClick={() => { if (!inWatch) addWatch(r); }}
                 style={{
                   padding: "6px 14px",
                   borderRadius: 8,

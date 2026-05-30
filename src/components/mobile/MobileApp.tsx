@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { useStore } from "@/store/useStore";
+import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { useQuotes } from "@/hooks/useQuotes";
 import { MShell } from "@/components/mobile/layout/MShell";
@@ -18,7 +18,6 @@ import { MHoldingSheet } from "@/components/mobile/sheets/MHoldingSheet";
 type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
 
 export function MobileApp() {
-  const store = useStore();
   const P = usePalette();
   useQuotes(); // start quote polling
 
@@ -26,7 +25,13 @@ export function MobileApp() {
   const [sheet, setSheet] = useState<SheetState>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { tab, setTab, holdingsFull, watchFull, sortedHoldings, sortedWatch, theme, addWatch } = store;
+  const tab = useStore((state) => state.tab);
+  const setTab = useStore((state) => state.setTab);
+  const theme = useStore((state) => state.theme);
+  const setTheme = useStore((state) => state.setTheme);
+  const watch = useStore((state) => state.watch);
+  const addWatch = useStore((state) => state.addWatch);
+  const { holdingsFull, watchFull, sortedHoldings, sortedWatch } = usePortfolioDerived();
 
   const goDetail = useCallback((code: string) => {
     setDetail(code);
@@ -57,12 +62,12 @@ export function MobileApp() {
 
   if (detail && detailInst) {
     topTitle = detailInst.name;
-    topSub = `${detailInst.code} · ${store.typeLabel(detailInst)}`;
+    topSub = `${detailInst.code} · ${typeLabel(detailInst)}`;
     topOnBack = () => setDetail(null);
-    const inWatch = store.watch.some((w) => w.code === detail);
+    const inWatch = watch.some((w) => w.code === detail);
     topRight = !inWatch ? (
       <button
-        onClick={() => { if (detailInst) store.addWatch(detailInst); }}
+        onClick={() => { if (detailInst) addWatch(detailInst); }}
         style={{ background: "none", border: "none", cursor: "pointer", color: P.accent, fontSize: 14, fontWeight: 600 }}
       >
         ＋ 自选
@@ -80,7 +85,7 @@ export function MobileApp() {
     }
     topRight = (
       <button
-        onClick={() => store.setTheme(theme === "dark" ? "light" : "dark")}
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         style={{ background: "none", border: "none", cursor: "pointer", fontSize: 26, color: P.muted }}
       >
         {theme === "dark" ? "☀" : "☾"}

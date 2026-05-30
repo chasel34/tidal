@@ -1,6 +1,6 @@
 "use client";
 
-import { useStore } from "@/store/useStore";
+import { unitLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { cFmtMoney, cFmtPct, cMove } from "@/lib/format";
 import { MCard } from "@/components/mobile/ui/MCard";
@@ -22,9 +22,11 @@ const SORT_CHIPS: { key: HoldingSortKey; label: string }[] = [
 ];
 
 export function MHoldings({ goDetail, openSheet }: MHoldingsProps) {
-  const store = useStore();
   const P = usePalette();
-  const { sortedHoldings, summary, sortH, toggleSortH, theme } = store;
+  const theme = useStore((state) => state.theme);
+  const sortH = useStore((state) => state.sortH);
+  const toggleSortH = useStore((state) => state.toggleSortH);
+  const { sortedHoldings, summary } = usePortfolioDerived();
 
   if (sortedHoldings.length === 0) {
     return (
@@ -92,7 +94,7 @@ export function MHoldings({ goDetail, openSheet }: MHoldingsProps) {
                 )}
               </div>
               <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>
-                {h.code} · {h.shares.toFixed(0)}{store.unitLabel(h)} · {h.weight.toFixed(1)}%
+                {h.code} · {h.shares.toFixed(0)}{unitLabel(h)} · {h.weight.toFixed(1)}%
               </div>
             </div>
             <div style={{ textAlign: "right", minWidth: 80 }}>

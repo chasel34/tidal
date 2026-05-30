@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { Palette } from "@/lib/theme";
 import { cFmtCompact, cFmtMoney, cFmtNum, cFmtPct, cMove } from "@/lib/format";
 import { PERIODS } from "@/lib/constants";
-import { useStore } from "@/store/useStore";
+import { typeLabel, unitLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { useKline } from "@/hooks/useKline";
 import { isOffMarketFund } from "@/lib/client-util";
 import { CandleChart } from "@/components/shared/charts/CandleChart";
@@ -20,13 +20,18 @@ import type { PaneProps } from "./types";
 const DETAIL_RANGES: DetailPeriod[] = ["1M", "3M", "1Y"];
 
 export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
-  const store = useStore();
+  const theme = useStore((state) => state.theme);
+  const holdings = useStore((state) => state.holdings);
+  const sortH = useStore((state) => state.sortH);
+  const toggleSortH = useStore((state) => state.toggleSortH);
+  const importHoldings = useStore((state) => state.importHoldings);
+  const { sortedHoldings, summary } = usePortfolioDerived();
   const [selCode, setSelCode] = useState<string | null>(null);
   const [detailPeriod, setDetailPeriod] = useState<DetailPeriod>("3M");
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const list = store.sortedHoldings;
+  const list = sortedHoldings;
 
   function showMsg(text: string, ok: boolean) {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -35,7 +40,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
   }
 
   function handleExport() {
-    exportJSON("holdings", store.holdings);
+    exportJSON("holdings", holdings);
   }
 
   function handleImportClick() {
@@ -49,7 +54,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
       const text = await file.text();
       const raw = JSON.parse(text) as unknown;
       const items = validateHoldings(raw);
-      store.importHoldings(items);
+      importHoldings(items);
       showMsg(`已导入 ${items.length} 条持仓`, true);
     } catch (err) {
       showMsg(err instanceof Error ? err.message : "导入失败", false);
@@ -83,7 +88,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {list.length} 只 · 市值 {cFmtMoney(store.summary.marketValue)}
+            {list.length} 只 · 市值 {cFmtMoney(summary.marketValue)}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -178,15 +183,15 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
                   sortKey={key}
                   align={align}
                   P={P}
-                  active={store.sortH.key === key}
-                  dir={store.sortH.dir}
-                  onClick={store.toggleSortH}
+                  active={sortH.key === key}
+                  dir={sortH.dir}
+                  onClick={toggleSortH}
                 />
               ))}
             </div>
             {list.map((row) => {
-              const todayC = cMove(row.todayPct, store.theme);
-              const gainC = cMove(row.gainAbs, store.theme);
+              const todayC = cMove(row.todayPct, theme);
+              const gainC = cMove(row.gainAbs, theme);
               const active = row.code === (h && h.code);
               return (
                 <div
@@ -218,7 +223,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
                       }}
                     >
                       {row.code} · {cFmtNum(row.shares, 0)}
-                      {store.unitLabel(row)}
+                      {unitLabel(row)}
                     </div>
                   </div>
                   <div style={{ textAlign: "right", color: P.text }}>
@@ -266,7 +271,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
                       marginBottom: 5,
                     }}
                   >
-                    {h.code} · {h.market.toUpperCase()} · {store.typeLabel(h)}
+                    {h.code} · {h.market.toUpperCase()} · {typeLabel(h)}
                   </div>
                   <div style={{ fontSize: 20, color: P.text }}>{h.name}</div>
                 </div>
@@ -289,7 +294,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
                 <div style={{ fontSize: 32, color: P.text, letterSpacing: "-0.02em" }}>
                   ¥{cFmtNum(h.price)}
                 </div>
-                <div style={{ fontSize: 14, color: cMove(h.todayPct, store.theme) }}>
+                <div style={{ fontSize: 14, color: cMove(h.todayPct, theme) }}>
                   {cFmtPct(h.todayPct)} 今日
                 </div>
               </div>
@@ -328,7 +333,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
                       candles={kline.candles}
                       labels={kline.labels}
                       height={170}
-                      theme={store.theme}
+                      theme={theme}
                       P={P}
                     />
                   ) : (
@@ -375,14 +380,14 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
                 <Stat label="持仓成本" value={`¥${cFmtNum(h.cost)}`} P={P} />
                 <Stat
                   label="持仓数量"
-                  value={`${cFmtNum(h.shares, 0)} ${store.unitLabel(h)}`}
+                  value={`${cFmtNum(h.shares, 0)} ${unitLabel(h)}`}
                   P={P}
                 />
                 <Stat label="持仓市值" value={cFmtMoney(h.marketValue, { dec: 0 })} P={P} />
                 <Stat
                   label="持仓盈亏"
                   value={`${h.gainAbs > 0 ? "+" : ""}${cFmtMoney(h.gainAbs, { dec: 0 })}`}
-                  color={cMove(h.gainAbs, store.theme)}
+                  color={cMove(h.gainAbs, theme)}
                   P={P}
                   sub={cFmtPct(h.gainPct)}
                 />
@@ -390,7 +395,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
                 <Stat
                   label="今日盈亏"
                   value={`${h.todayDeltaTotal > 0 ? "+" : ""}${cFmtMoney(h.todayDeltaTotal, { dec: 0 })}`}
-                  color={cMove(h.todayDeltaTotal, store.theme)}
+                  color={cMove(h.todayDeltaTotal, theme)}
                   P={P}
                 />
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useStore } from "@/store/useStore";
+import { typeLabel, unitLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { useKline } from "@/hooks/useKline";
 import { cFmtMoney, cFmtNum, cFmtPct, cMove } from "@/lib/format";
@@ -22,10 +22,11 @@ interface MStockDetailProps {
 
 const TAKE_MAP: Record<DetailPeriod, number> = { "1M": 22, "3M": 66, "1Y": 250 };
 
-export function MStockDetail({ code, onBack, openSheet }: MStockDetailProps) {
-  const store = useStore();
+export function MStockDetail({ code, onBack: _onBack, openSheet }: MStockDetailProps) {
   const P = usePalette();
-  const { holdingsFull, watchFull, quotes, theme } = store;
+  const theme = useStore((state) => state.theme);
+  const quotes = useStore((state) => state.quotes);
+  const { holdingsFull, watchFull } = usePortfolioDerived();
   const [period, setPeriod] = useState<DetailPeriod>("1M");
 
   const holding = holdingsFull.find((h) => h.code === code);
@@ -45,7 +46,7 @@ export function MStockDetail({ code, onBack, openSheet }: MStockDetailProps) {
     <div style={{ padding: "0 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Price hero */}
       <div style={{ padding: "12px 0" }}>
-        {inst && <div style={{ fontSize: 11, color: P.subtle, marginBottom: 4 }}>{inst.code} · {inst.market?.toUpperCase()} · {store.typeLabel(inst)}</div>}
+        {inst && <div style={{ fontSize: 11, color: P.subtle, marginBottom: 4 }}>{inst.code} · {inst.market?.toUpperCase()} · {typeLabel(inst)}</div>}
         <div style={{ fontSize: 40, fontWeight: 300, color: cMove(todayPct, theme), fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
           {cFmtNum(price)}
         </div>
@@ -72,7 +73,7 @@ export function MStockDetail({ code, onBack, openSheet }: MStockDetailProps) {
           <MSectionLabel P={P}>我的持仓</MSectionLabel>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
             <MStat P={P} label="成本价" value={cFmtNum(holding.cost)} />
-            <MStat P={P} label="持有" value={`${holding.shares.toFixed(0)}${store.unitLabel(holding)}`} />
+            <MStat P={P} label="持有" value={`${holding.shares.toFixed(0)}${unitLabel(holding)}`} />
             <MStat P={P} label="市值" value={cFmtMoney(holding.marketValue, { dec: 0 })} />
             <MStat P={P} label="仓位" value={holding.weight.toFixed(1) + "%"} />
             <MStat P={P} label="累计盈亏" value={cFmtMoney(holding.gainAbs, { sign: true })} color={cMove(holding.gainAbs, theme)} />

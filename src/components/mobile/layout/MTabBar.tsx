@@ -9,7 +9,7 @@ interface MTabBarProps {
   setTab: (t: TabId) => void;
 }
 
-function IconToday({ active, P }: { active: boolean; P: Palette }) {
+function IconToday({ active, P: _P }: { active: boolean; P: Palette }) {
   return (
     <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 13l9-9 9 9" />

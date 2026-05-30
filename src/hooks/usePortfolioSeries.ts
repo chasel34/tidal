@@ -18,7 +18,10 @@ const EMPTY: SeriesResult = { series: [], labels: [], loading: false };
 /** Aggregate the portfolio value time-series for the given period.
  *  Daily periods sum shares × close (+ cash); 1D uses intraday minute data. */
 export function usePortfolioSeries(period: Period): SeriesResult {
-  const { holdings, cash, quotes, hydrated } = useStore();
+  const holdings = useStore((state) => state.holdings);
+  const cash = useStore((state) => state.cash);
+  const quotes = useStore((state) => state.quotes);
+  const hydrated = useStore((state) => state.hydrated);
   const [result, setResult] = useState<SeriesResult>(EMPTY);
 
   // signature so we only refetch when relevant inputs change. Quote prices are

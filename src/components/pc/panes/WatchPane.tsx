@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import type { Palette } from "@/lib/theme";
 import { cFmtNum, cFmtPct, cMove } from "@/lib/format";
-import { useStore } from "@/store/useStore";
+import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { useDailyCloses } from "@/hooks/useDailyCloses";
 import { Spark } from "@/components/shared/charts/Spark";
 import { SortTh } from "@/components/shared/ui/SortTh";
@@ -14,12 +14,18 @@ import type { WatchSortKey } from "@/lib/types";
 import type { PaneProps } from "./types";
 
 export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
-  const store = useStore();
+  const theme = useStore((state) => state.theme);
+  const watch = useStore((state) => state.watch);
+  const sortW = useStore((state) => state.sortW);
+  const toggleSortW = useStore((state) => state.toggleSortW);
+  const removeWatch = useStore((state) => state.removeWatch);
+  const importWatch = useStore((state) => state.importWatch);
+  const { sortedWatch } = usePortfolioDerived();
   const [hoverCode, setHoverCode] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const list = store.sortedWatch;
+  const list = sortedWatch;
   const sparks = useDailyCloses(list);
 
   function showMsg(text: string, ok: boolean) {
@@ -29,7 +35,7 @@ export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
   }
 
   function handleExport() {
-    exportJSON("watch", store.watch);
+    exportJSON("watch", watch);
   }
 
   function handleImportClick() {
@@ -43,7 +49,7 @@ export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
       const text = await file.text();
       const raw = JSON.parse(text) as unknown;
       const items = validateWatch(raw);
-      store.importWatch(items);
+      importWatch(items);
       showMsg(`已导入 ${items.length} 条自选`, true);
     } catch (err) {
       showMsg(err instanceof Error ? err.message : "导入失败", false);
@@ -154,9 +160,9 @@ export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
               sortKey={"name" as WatchSortKey}
               align="left"
               P={P}
-              active={store.sortW.key === "name"}
-              dir={store.sortW.dir}
-              onClick={store.toggleSortW}
+              active={sortW.key === "name"}
+              dir={sortW.dir}
+              onClick={toggleSortW}
             />
             <span
               style={{
@@ -172,17 +178,17 @@ export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
               label="现价"
               sortKey={"price" as WatchSortKey}
               P={P}
-              active={store.sortW.key === "price"}
-              dir={store.sortW.dir}
-              onClick={store.toggleSortW}
+              active={sortW.key === "price"}
+              dir={sortW.dir}
+              onClick={toggleSortW}
             />
             <SortTh
               label="今日"
               sortKey={"today" as WatchSortKey}
               P={P}
-              active={store.sortW.key === "today"}
-              dir={store.sortW.dir}
-              onClick={store.toggleSortW}
+              active={sortW.key === "today"}
+              dir={sortW.dir}
+              onClick={toggleSortW}
             />
             <span
               style={{
@@ -198,7 +204,7 @@ export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
             <span />
           </div>
           {list.map((w, i) => {
-            const c = cMove(w.todayPct, store.theme);
+            const c = cMove(w.todayPct, theme);
             const hovered = hoverCode === w.code;
             const spark = sparks[w.code];
             return (
@@ -239,11 +245,11 @@ export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
                 </div>
                 <div style={{ textAlign: "right", color: c }}>{cFmtPct(w.todayPct)}</div>
                 <div style={{ textAlign: "right", color: P.subtle, fontSize: 11 }}>
-                  {store.typeLabel(w)}
+                  {typeLabel(w)}
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <button
-                    onClick={() => store.removeWatch(w.code)}
+                    onClick={() => removeWatch(w.code)}
                     title="移除自选"
                     style={{
                       background: "transparent",

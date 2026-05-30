@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useStore } from "@/store/useStore";
+import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { usePortfolioSeries } from "@/hooks/usePortfolioSeries";
 import { useDailyCloses } from "@/hooks/useDailyCloses";
@@ -23,10 +23,14 @@ interface MTodayProps {
   openSheet: (s: SheetState) => void;
 }
 
-export function MToday({ goDetail, openSheet }: MTodayProps) {
-  const store = useStore();
+export function MToday({ goDetail, openSheet: _openSheet }: MTodayProps) {
   const P = usePalette();
-  const { summary, allocation, sortedHoldings, sortedWatch, theme, period, setPeriod } = store;
+  const theme = useStore((state) => state.theme);
+  const period = useStore((state) => state.period);
+  const setPeriod = useStore((state) => state.setPeriod);
+  const setTab = useStore((state) => state.setTab);
+  const quotes = useStore((state) => state.quotes);
+  const { summary, allocation, sortedHoldings, sortedWatch } = usePortfolioDerived();
   const { series, labels, loading } = usePortfolioSeries(period);
   const colors = allocColors(P.isDark);
 
@@ -43,7 +47,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <MIndexBar P={P} theme={theme} quotes={store.quotes} onGoWatch={() => store.setTab("watch")} />
+      <MIndexBar P={P} theme={theme} quotes={quotes} onGoWatch={() => setTab("watch")} />
       <div style={{ padding: "0 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "20px 0 8px" }}>
@@ -100,7 +104,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
           <MSectionLabel
             P={P}
             action={
-              <button onClick={() => store.setTab("holdings")} style={{ background: "none", border: "none", cursor: "pointer", color: P.accent, fontSize: 12 }}>
+              <button onClick={() => setTab("holdings")} style={{ background: "none", border: "none", cursor: "pointer", color: P.accent, fontSize: 12 }}>
                 全部 ›
               </button>
             }
@@ -122,7 +126,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: P.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name}</div>
-                  <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{h.code} · {store.typeLabel(h)}</div>
+                  <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{h.code} · {typeLabel(h)}</div>
                 </div>
                 <Spark data={sparks[h.code] || []} width={48} height={18} color={cMove(h.todayPct, theme)} />
                 <div style={{ textAlign: "right", marginLeft: 12, minWidth: 64 }}>
@@ -141,7 +145,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
           <MSectionLabel
             P={P}
             action={
-              <button onClick={() => store.setTab("watch")} style={{ background: "none", border: "none", cursor: "pointer", color: P.accent, fontSize: 12 }}>
+              <button onClick={() => setTab("watch")} style={{ background: "none", border: "none", cursor: "pointer", color: P.accent, fontSize: 12 }}>
                 全部 ›
               </button>
             }
@@ -163,7 +167,7 @@ export function MToday({ goDetail, openSheet }: MTodayProps) {
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: P.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.name}</div>
-                  <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{w.code} · {store.typeLabel(w)}</div>
+                  <div style={{ fontSize: 11, color: P.subtle, marginTop: 2 }}>{w.code} · {typeLabel(w)}</div>
                 </div>
                 <Spark data={sparks[w.code] || []} width={48} height={18} color={cMove(w.todayPct, theme)} />
                 <div style={{ textAlign: "right", marginLeft: 12, minWidth: 64 }}>

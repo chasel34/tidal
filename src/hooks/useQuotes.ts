@@ -9,7 +9,11 @@ import type { IndexQuote, Instrument } from "@/lib/types";
 /** Polls live quotes for holdings + watch + indices and feeds them into the store.
  *  Returns derived index quotes for the sidebar. */
 export function useQuotes(): IndexQuote[] {
-  const { hydrated, holdings, watch, quotes, setQuotes } = useStore();
+  const hydrated = useStore((state) => state.hydrated);
+  const holdings = useStore((state) => state.holdings);
+  const watch = useStore((state) => state.watch);
+  const quotes = useStore((state) => state.quotes);
+  const setQuotes = useStore((state) => state.setQuotes);
 
   const instruments = useMemo<Instrument[]>(() => {
     const map = new Map<string, Instrument>();
