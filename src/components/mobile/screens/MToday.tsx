@@ -1,10 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
-import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
+import { typeLabel, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
-import { usePortfolioSeries } from "@/hooks/usePortfolioSeries";
-import { useDailyCloses } from "@/hooks/useDailyCloses";
+import { useTodayScreen } from "@/hooks/useTodayScreen";
 import { cFmtMoney, cFmtPct, cFmtCompact, cMove } from "@/lib/format";
 import { allocColors } from "@/lib/theme";
 import { MCard } from "@/components/mobile/ui/MCard";
@@ -14,7 +12,7 @@ import { MArea } from "@/components/mobile/charts/MArea";
 import { Spark } from "@/components/shared/charts/Spark";
 import { Donut } from "@/components/shared/charts/Donut";
 import { MIndexBar } from "@/components/mobile/ui/MIndexBar";
-import type { Instrument, Period } from "@/lib/types";
+import type { Period } from "@/lib/types";
 
 type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
 
@@ -26,21 +24,21 @@ interface MTodayProps {
 export function MToday({ goDetail, openSheet: _openSheet }: MTodayProps) {
   const P = usePalette();
   const theme = useStore((state) => state.theme);
-  const period = useStore((state) => state.period);
-  const setPeriod = useStore((state) => state.setPeriod);
-  const setTab = useStore((state) => state.setTab);
   const quotes = useStore((state) => state.quotes);
-  const { summary, allocation, sortedHoldings, sortedWatch } = usePortfolioDerived();
-  const { series, labels, loading } = usePortfolioSeries(period);
+  const {
+    summary,
+    allocation,
+    sortedHoldings,
+    sortedWatch,
+    series,
+    labels,
+    seriesLoading,
+    sparks,
+    period,
+    setPeriod,
+    setTab,
+  } = useTodayScreen();
   const colors = allocColors(P.isDark);
-
-  const miniInstruments = useMemo<Instrument[]>(() => {
-    const codes = new Map<string, Instrument>();
-    sortedHoldings.slice(0, 5).forEach((h) => codes.set(h.code, h));
-    [...sortedWatch].sort((a, b) => b.todayPct - a.todayPct).slice(0, 5).forEach((w) => codes.set(w.code, w));
-    return [...codes.values()];
-  }, [sortedHoldings, sortedWatch]);
-  const sparks = useDailyCloses(miniInstruments);
 
   const topHoldings = sortedHoldings.slice(0, 4);
   const topWatch = [...sortedWatch].sort((a, b) => Math.abs(b.todayPct) - Math.abs(a.todayPct)).slice(0, 4);
@@ -65,7 +63,7 @@ export function MToday({ goDetail, openSheet: _openSheet }: MTodayProps) {
       {/* Chart */}
       <MCard P={P}>
         <MSectionLabel P={P}>资产走势</MSectionLabel>
-        {loading && series.length === 0 ? (
+        {seriesLoading && series.length === 0 ? (
           <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: P.subtle, fontSize: 13 }}>加载中...</div>
         ) : series.length > 0 ? (
           <MArea series={series} labels={labels} height={200} P={P} formatValue={(v) => cFmtMoney(v, { dec: 0 })} formatY={cFmtCompact} />

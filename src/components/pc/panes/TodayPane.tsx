@@ -1,48 +1,41 @@
 "use client";
 
-import { useMemo } from "react";
 import type { Palette } from "@/lib/theme";
 import { allocColors } from "@/lib/theme";
 import { cFmtCompact, cFmtMoney, cFmtPct, cMove } from "@/lib/format";
-import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
-import { usePortfolioSeries } from "@/hooks/usePortfolioSeries";
-import { useDailyCloses } from "@/hooks/useDailyCloses";
+import { typeLabel, useStore } from "@/store/useStore";
+import { useTodayScreen } from "@/hooks/useTodayScreen";
 import { Donut } from "@/components/shared/charts/Donut";
 import { AreaChart } from "@/components/shared/charts/AreaChart";
 import { Spark } from "@/components/shared/charts/Spark";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
-import type { Period, HoldingFull, WatchFull, Instrument, Theme } from "@/lib/types";
+import type { Period, HoldingFull, WatchFull, Theme } from "@/lib/types";
 import type { PaneProps } from "./types";
 
 const RANGES: Period[] = ["1D", "1W", "1M", "3M", "1Y"];
 
 export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
-  const period = useStore((state) => state.period);
-  const setPeriod = useStore((state) => state.setPeriod);
   const theme = useStore((state) => state.theme);
-  const holdings = useStore((state) => state.holdings);
-  const watch = useStore((state) => state.watch);
-  const setTab = useStore((state) => state.setTab);
-  const { summary, allocation, sortedHoldings, watchFull } = usePortfolioDerived();
-  const { series, labels } = usePortfolioSeries(period);
+  const {
+    summary,
+    allocation,
+    sortedHoldings,
+    sortedWatch,
+    series,
+    labels,
+    sparks,
+    period,
+    setPeriod,
+    setTab,
+    isEmpty,
+  } = useTodayScreen();
 
   const up = summary.todayDelta >= 0;
   const moveC = cMove(summary.todayDelta, theme);
   const colors = allocColors(P.isDark);
   const totalAlloc = allocation.reduce((s, x) => s + x.value, 0) || 1;
 
-  const miniInstruments = useMemo<Instrument[]>(() => {
-    const codes = new Map<string, Instrument>();
-    sortedHoldings.slice(0, 5).forEach((h) => codes.set(h.code, h));
-    [...watchFull]
-      .sort((a, b) => b.todayPct - a.todayPct)
-      .slice(0, 5)
-      .forEach((w) => codes.set(w.code, w));
-    return [...codes.values()];
-  }, [sortedHoldings, watchFull]);
-  const sparks = useDailyCloses(miniInstruments);
-
-  if (!holdings.length && !watch.length) {
+  if (isEmpty) {
     return (
       <EmptyState
         P={P}
@@ -233,7 +226,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
               fontSize: 13,
             }}
           >
-            {holdings.length ? "加载走势中…" : "添加持仓后查看资产走势"}
+            {!isEmpty ? "加载走势中…" : "添加持仓后查看资产走势"}
           </div>
         )}
       </div>
@@ -255,7 +248,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
           actionLabel="全部 →"
           onAction={() => setTab("watch")}
           P={P}
-          rows={[...watchFull].sort((a, b) => b.todayPct - a.todayPct).slice(0, 5)}
+          rows={[...sortedWatch].sort((a, b) => b.todayPct - a.todayPct).slice(0, 5)}
           sparks={sparks}
           emptyText="暂无自选"
           theme={theme}
