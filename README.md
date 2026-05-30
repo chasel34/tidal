@@ -33,10 +33,10 @@
 | 框架 | [Next.js](https://nextjs.org) (App Router) |
 | 语言 | TypeScript |
 | 样式 | 内联 `style` 属性 + Tailwind CSS（仅 base reset） |
-| 状态 | React Context + `localStorage` 持久化 |
+| 状态 | Zustand（客户端） + TanStack Query（服务端数据） |
 | 行情 | `stock-sdk`（A 股 / ETF / 指数实时行情、K 线） |
 | 基金数据 | 天天基金（`fund.eastmoney.com`）净值 / 详情 API |
-| 包管理 | pnpm |
+| 包管理 | pnpm monorepo（`apps/web`） |
 
 ## 快速开始
 
@@ -56,27 +56,37 @@ pnpm build
 
 # 代码检查
 pnpm lint
+
+# 运行测试
+pnpm test
 ```
 
 ## 项目结构
 
 ```
-src/
-├── app/
-│   ├── api/          # 服务端 API 路由（行情、K 线、基金净值等，带内存缓存）
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   ├── charts/       # AreaChart、CandleChart、Donut、Spark 等图表组件
-│   ├── modals/       # 添加持仓、添加自选弹窗
-│   ├── panes/        # 今日总览、持仓、自选三个主视图
-│   ├── ui/           # 通用 UI 组件
-│   ├── Sidebar.tsx
-│   └── TidalApp.tsx
-├── hooks/            # 数据获取 hooks（行情、K 线、基金详情等）
-├── lib/              # 类型定义、工具函数、主题、格式化
-└── store/
-    └── useStore.tsx  # 全局状态 Context
+apps/web/                # Next.js Web 应用
+├── src/
+│   ├── app/
+│   │   ├── api/         # 服务端 API 路由（行情、K 线、基金净值等，带内存缓存）
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── charts/      # AreaChart、CandleChart、Donut、Spark 等图表组件
+│   │   ├── modals/      # 添加持仓、添加自选弹窗
+│   │   ├── panes/       # 今日总览、持仓、自选三个主视图
+│   │   ├── ui/          # 通用 UI 组件
+│   │   ├── Sidebar.tsx
+│   │   └── TidalApp.tsx
+│   ├── hooks/           # 数据获取 hooks（行情、K 线、基金详情等）
+│   ├── lib/             # 类型定义、工具函数、主题、格式化
+│   └── store/
+│       └── useStore.tsx # 全局状态（Zustand + localStorage 持久化）
+├── public/
+├── next.config.ts
+├── tsconfig.json
+├── eslint.config.mjs
+└── package.json
+docs/adr/                # 架构决策记录
 ```
 
 ## 数据说明
