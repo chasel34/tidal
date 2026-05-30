@@ -2,37 +2,13 @@
   "name": "tidal",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.3.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest",
-    "test:ui": "vitest --ui"
-  },
-  "dependencies": {
-    "@base-ui/react": "^1.5.0",
-    "@tanstack/react-query": "^5.100.14",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "stock-sdk": "^1.10.0",
-    "zustand": "^5.0.13"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^6.0.2",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "jsdom": "^29.1.1",
-    "tailwindcss": "^4",
-    "typescript": "^6.0.3",
-    "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.7"
+    "dev": "pnpm -F @tidal/web dev",
+    "build": "pnpm -F @tidal/web build",
+    "start": "pnpm -F @tidal/web start",
+    "lint": "pnpm -F @tidal/web lint",
+    "test": "pnpm -F @tidal/web test",
+    "test:ui": "pnpm -F @tidal/web test:ui"
   }
 }

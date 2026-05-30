@@ -7,9 +7,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Project conventions
 
 - Never edit CLAUDE.md directly — all instructions go in AGENTS.md
-- Package manager: `pnpm`. Commands: `pnpm dev`, `pnpm build`, `pnpm lint`
-- Path alias: `@/*` → `./src/*`
-- No tests configured. No Prettier — only ESLint (flat config, `eslint-config-next`).
+- Package manager: `pnpm`. Monorepo with workspaces (`apps/web`).
+- Root scripts delegate to apps: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm test`
+- Or run directly in the app: `pnpm -F @tidal/web <script>`
+- Path alias: `@/*` → `./src/*` (relative to `apps/web`)
+- ESLint flat config in `apps/web/eslint.config.mjs`. Vitest configured in `apps/web/vitest.config.mts`.
 
 # Architecture
 

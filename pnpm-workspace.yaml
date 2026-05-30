@@ -1,2 +1,5 @@
+packages:
+  - 'apps/*'
+
 minimumReleaseAgeExclude:
   - stock-sdk@1.10.0
