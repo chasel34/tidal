@@ -19,3 +19,15 @@ Computed portfolio facts derived from 持仓, cash, quotes, and sort state. This
 ### Quote
 
 Normalized live market data used to enrich 持仓 and 自选. For 场外基金, Quote can represent either an intraday estimate or the latest settled NAV.
+
+### 主看板
+
+The full dashboard surface for reviewing and managing 持仓, 自选, portfolio summary, and instrument detail.
+
+### 菜单栏看板
+
+A compact, glanceable dashboard surface for 持仓, 自选, market indices, and portfolio summary. 菜单栏看板 complements 主看板 rather than replacing it.
+
+### 价格提醒
+
+A user-defined threshold rule for an instrument. 价格提醒 becomes relevant when live Quote data crosses the configured threshold.

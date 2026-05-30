@@ -5,10 +5,15 @@
   "packageManager": "pnpm@11.3.0",
   "scripts": {
     "dev": "pnpm -F @tidal/web dev",
+    "dev:menubar": "pnpm -F @tidal/menubar dev",
     "build": "pnpm -F @tidal/web build",
+    "build:menubar": "pnpm -F @tidal/menubar build",
     "start": "pnpm -F @tidal/web start",
+    "start:menubar": "pnpm -F @tidal/menubar start",
     "lint": "pnpm -F @tidal/web lint",
+    "lint:menubar": "pnpm -F @tidal/menubar lint",
     "test": "pnpm -F @tidal/web test",
+    "test:menubar": "pnpm -F @tidal/menubar test",
     "test:ui": "pnpm -F @tidal/web test:ui"
   }
 }
