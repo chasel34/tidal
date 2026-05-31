@@ -21,6 +21,10 @@
 - 搜索并添加任意标的（股票、ETF、指数、场外基金）
 - 展示现价、今日涨跌、近月走势迷你图
 
+### 菜单栏看板（Electron）
+- 常驻 macOS 菜单栏的轻量看板（`apps/menubar`），随时查看持仓与行情
+- 基于 electron-vite 构建，与 Web 端共享 `stock-sdk` 行情与 Zustand 状态约定
+
 ### 其他
 - 亮色 / 暗色主题切换
 - 所有数据持久化至 `localStorage`，刷新不丢失
@@ -31,12 +35,13 @@
 | 层级 | 技术 |
 |------|------|
 | 框架 | [Next.js](https://nextjs.org) (App Router) |
+| 菜单栏看板 | [Electron](https://www.electronjs.org)（electron-vite，常驻 macOS 菜单栏） |
 | 语言 | TypeScript |
 | 样式 | 内联 `style` 属性 + Tailwind CSS（仅 base reset） |
 | 状态 | Zustand（客户端） + TanStack Query（服务端数据） |
 | 行情 | `stock-sdk`（A 股 / ETF / 指数实时行情、K 线） |
 | 基金数据 | 天天基金（`fund.eastmoney.com`）净值 / 详情 API |
-| 包管理 | pnpm monorepo（`apps/web`） |
+| 包管理 | pnpm monorepo（`apps/web` + `apps/menubar`） |
 
 ## 快速开始
 
@@ -44,21 +49,28 @@
 # 安装依赖
 pnpm install
 
-# 启动开发服务器
+# 启动 Web 开发服务器
 pnpm dev
+
+# 启动菜单栏看板（Electron）
+pnpm dev:menubar
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 即可使用。
+打开 [http://localhost:3000](http://localhost:3000) 即可使用 Web 端。
 
 ```bash
-# 构建生产版本
+# 构建生产版本（递归构建所有应用）
 pnpm build
 
-# 代码检查
+# 代码检查（递归）
 pnpm lint
 
-# 运行测试
+# 运行测试（递归）
 pnpm test
+
+# 打包菜单栏看板（macOS，dmg + zip）
+pnpm dist:menubar
+# 仅出某种产物：pnpm -F @tidal/menubar dist:dmg | dist:zip | dist:dir
 ```
 
 ## 项目结构
@@ -83,9 +95,22 @@ apps/web/                # Next.js Web 应用
 │       └── useStore.tsx # 全局状态（Zustand + localStorage 持久化）
 ├── public/
 ├── next.config.ts
-├── tsconfig.json
+├── tsconfig.json        # extends ../../tsconfig.base.json
 ├── eslint.config.mjs
 └── package.json
+apps/menubar/            # Electron 菜单栏应用（electron-vite）
+├── src/
+│   ├── main/            # 主进程（菜单栏 tray、窗口）
+│   ├── preload/         # 预加载脚本
+│   ├── renderer/        # 渲染进程（React 看板 UI）
+│   └── shared/          # 主进程 / 渲染进程共享代码
+├── electron.vite.config.ts
+├── tsconfig.json        # extends ../../tsconfig.base.json
+├── eslint.config.mjs
+└── package.json
+tsconfig.base.json       # 共享 TS 编译选项
+eslint.config.base.mjs   # 共享 eslint 忽略规则
+pnpm-workspace.yaml      # workspace + 依赖 catalog（共享版本）
 docs/adr/                # 架构决策记录
 ```
 

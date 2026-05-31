@@ -7,32 +7,33 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@base-ui/react": "^1.5.0",
-    "@tanstack/react-query": "^5.100.14",
+    "@base-ui/react": "catalog:",
+    "@tanstack/react-query": "catalog:",
     "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "stock-sdk": "^1.10.0",
-    "zustand": "^5.0.13"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "stock-sdk": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^6.0.2",
-    "eslint": "^9",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "eslint": "catalog:",
     "eslint-config-next": "16.2.6",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
-    "typescript": "^6.0.3",
+    "typescript": "catalog:",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.7"
+    "vitest": "catalog:"
   }
 }

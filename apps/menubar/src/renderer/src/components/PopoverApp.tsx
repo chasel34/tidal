@@ -219,7 +219,7 @@ export function PopoverApp() {
     let cancelled = false;
     void renderTrayImage(descriptor).then((bitmap) => {
       if (cancelled) return;
-      void window.tidal.setTrayImage({ bitmap, label: descriptor.label, tooltip: descriptor.tooltip });
+      void window.tidal.setTrayImage({ bitmap, label: descriptor.label, tooltip: descriptor.tooltip, template: descriptor.template });
     });
     return () => {
       cancelled = true;

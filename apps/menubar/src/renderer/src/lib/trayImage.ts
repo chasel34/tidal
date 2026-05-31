@@ -62,6 +62,8 @@ export interface TrayDescriptor {
   iconColor: string;
   labelColor: string;
   tooltip: string;
+  /** True when the image is icon-only and should be set as a macOS template image. */
+  template: boolean;
 }
 
 // Pure mapping from app state to what the menu-bar item should show. The menu
@@ -75,18 +77,27 @@ export function describeTray(opts: {
   todayDelta: number;
   totalAssets: number;
 }): TrayDescriptor {
-  const iconColor = opts.systemTheme === "dark" ? "rgba(240,240,245,0.92)" : "rgba(30,28,24,0.88)";
   let label = "";
-  let labelColor = iconColor;
   if (opts.hasPortfolio) {
     if (opts.mode === "percent") {
       label = cFmtPct(opts.todayPct);
-      labelColor = moveColor(opts.todayDelta, opts.systemTheme, opts.conv);
     } else if (opts.mode === "total") {
       label = cFmtMoney(opts.totalAssets, { dec: 0 });
     }
   }
-  return { label, iconColor, labelColor, tooltip: label ? `Tidal ${label}` : "Tidal 菜单栏看板" };
+  // Icon-only mode uses a macOS template image — draw in black so the OS applies
+  // the correct tint (white in dark menu bar, black in light menu bar).
+  const template = !label;
+  const iconColor = template
+    ? "#000000"
+    : opts.systemTheme === "dark"
+      ? "rgba(240,240,245,0.92)"
+      : "rgba(30,28,24,0.88)";
+  const labelColor =
+    opts.mode === "percent"
+      ? moveColor(opts.todayDelta, opts.systemTheme, opts.conv)
+      : iconColor;
+  return { label, iconColor, labelColor, template, tooltip: label ? `Tidal ${label}` : "Tidal 菜单栏看板" };
 }
 
 export async function renderTrayImage(descriptor: TrayDescriptor): Promise<TrayImageBitmap | null> {
