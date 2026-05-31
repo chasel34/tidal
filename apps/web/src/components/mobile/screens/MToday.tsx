@@ -21,7 +21,7 @@ interface MTodayProps {
   openSheet: (s: SheetState) => void;
 }
 
-export function MToday({ goDetail, openSheet: _openSheet }: MTodayProps) {
+export function MToday({ goDetail }: MTodayProps) {
   const P = usePalette();
   const theme = useStore((state) => state.theme);
   const quotes = useStore((state) => state.quotes);
