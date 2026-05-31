@@ -38,9 +38,9 @@ let latestQuotes: Record<string, Quote> = {};
 function plotPixel(buffer: Buffer, size: number, x: number, y: number, alpha: number) {
   if (x < 0 || y < 0 || x >= size || y >= size || alpha <= 0) return;
   const offset = (y * size + x) * 4;
-  buffer[offset] = 255;
-  buffer[offset + 1] = 255;
-  buffer[offset + 2] = 255;
+  buffer[offset] = 0;
+  buffer[offset + 1] = 0;
+  buffer[offset + 2] = 0;
   buffer[offset + 3] = Math.max(buffer[offset + 3], Math.round(alpha * 255));
 }
 
@@ -134,7 +134,7 @@ function createTrayImage() {
     height: 22,
     quality: "best",
   });
-  image.setTemplateImage(false);
+  image.setTemplateImage(true);
   return image;
 }
 
@@ -254,7 +254,7 @@ function applyTrayImage(payload: TrayImagePayload) {
       const image = nativeImage.createEmpty();
       image.addRepresentation(payload.bitmap);
       if (!image.isEmpty()) {
-        image.setTemplateImage(false);
+        image.setTemplateImage(payload.template ?? false);
         tray.setImage(image);
         if (process.platform === "darwin") tray.setTitle("");
         applied = true;

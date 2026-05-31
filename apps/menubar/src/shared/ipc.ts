@@ -49,6 +49,8 @@ export interface TrayImagePayload {
   label: string;
   /** Tooltip shown on hover. */
   tooltip: string;
+  /** True when the bitmap is a macOS template image (icon-only, no colored label). */
+  template?: boolean;
 }
 
 export interface TidalApi {
