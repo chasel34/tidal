@@ -22,6 +22,8 @@ catalog:
 
 allowBuilds:
   electron: true
+  esbuild: true
+  electron-winstaller: true
   sharp: true
   unrs-resolver: true
 
