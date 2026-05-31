@@ -12,7 +12,20 @@ const stock = {
 
 describe("derivePortfolio", () => {
   it("derives menu bar portfolio summary from holdings, cash, watch, and quotes", () => {
-    const holdings: HoldingItem[] = [{ instrument: stock, shares: 2, cost: 100 }];
+    const holdings: HoldingItem[] = [
+      {
+        instrument: {
+          code: "sz000858",
+          name: "五粮液",
+          market: "sz",
+          category: "stock",
+          type: "GP-A",
+        },
+        shares: 1,
+        cost: 100,
+      },
+      { instrument: stock, shares: 2, cost: 100 },
+    ];
     const watch: WatchItem[] = [
       { code: "sz399001", name: "深证成指", market: "sz", category: "index", type: "ZS" },
     ];
@@ -33,13 +46,22 @@ describe("derivePortfolio", () => {
         change: 100,
         changePercent: 1.01,
       },
+      sz000858: {
+        code: "sz000858",
+        name: "五粮液",
+        price: 80,
+        prevClose: 75,
+        change: 5,
+        changePercent: 6.67,
+      },
     };
 
-    const result = derivePortfolio(holdings, watch, 50, quotes);
+    const result = derivePortfolio({ holdings, watch, cash: 50, quotes });
 
-    expect(result.summary.totalAssets).toBe(290);
-    expect(result.summary.marketValue).toBe(240);
-    expect(result.summary.todayDelta).toBe(20);
+    expect(result.summary.totalAssets).toBe(370);
+    expect(result.summary.marketValue).toBe(320);
+    expect(result.summary.todayDelta).toBe(25);
+    expect(result.holdingsFull.map((holding) => holding.code)).toEqual(["sh600519", "sz000858"]);
     expect(result.holdingsFull[0].gainPct).toBe(20);
     expect(result.watchFull[0].todayPct).toBe(1.01);
   });

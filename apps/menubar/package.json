@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
+    "@tidal/core": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "lucide-react": "^1.16.0",
     "react": "catalog:",

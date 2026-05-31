@@ -39,7 +39,7 @@
 
 ### 菜单栏看板（Electron）
 - 常驻 macOS 菜单栏的轻量看板（`apps/menubar`），随时查看持仓与行情
-- 基于 electron-vite 构建，与 Web 端共享 `stock-sdk` 行情与 Zustand 状态约定
+- 基于 electron-vite 构建，与 Web 端共享 `stock-sdk` 行情与 `@tidal/core` 持仓/行情归一化规则
 
 ### 其他
 - 亮色 / 暗色主题切换
@@ -57,7 +57,7 @@
 | 状态 | Zustand（客户端） + TanStack Query（服务端数据） |
 | 行情 | `stock-sdk`（A 股 / ETF / 指数实时行情、K 线） |
 | 基金数据 | 天天基金（`fund.eastmoney.com`）净值 / 详情 API |
-| 包管理 | pnpm monorepo（`apps/web` + `apps/menubar`） |
+| 包管理 | pnpm monorepo（`apps/web` + `apps/menubar` + `packages/core`） |
 
 ## 快速开始
 
@@ -123,6 +123,13 @@ apps/menubar/            # Electron 菜单栏应用（electron-vite）
 ├── electron.vite.config.ts
 ├── tsconfig.json        # extends ../../tsconfig.base.json
 ├── eslint.config.mjs
+└── package.json
+packages/core/           # Web 与菜单栏共享的领域逻辑
+├── src/
+│   ├── portfolio.ts     # 持仓派生、汇总、配置与排序
+│   ├── portfolio-history.ts
+│   ├── quote-normalizer.ts
+│   └── types.ts
 └── package.json
 tsconfig.base.json       # 共享 TS 编译选项
 eslint.config.base.mjs   # 共享 eslint 忽略规则

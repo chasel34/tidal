@@ -1,4 +1,5 @@
 import { INDICES } from "@shared/constants";
+import { createPortfolioHistory } from "@tidal/core";
 import type {
   FundNavPoint,
   FundProfile,
@@ -11,7 +12,6 @@ import type {
   SearchResultDTO,
 } from "@shared/types";
 import type { SeriesPoint } from "@shared/series";
-import { buildDailySeries, buildIntradaySeries } from "@shared/series";
 import { checkPriceAlerts } from "./alerts";
 import { buildFundProfile, type EastmoneyPort, type SdkPort } from "./fund-profile";
 import { bareCode, getSdk, hasKlineMarket } from "./sdk";
@@ -169,46 +169,11 @@ export async function getPortfolioSeries(payload: {
   quotes: Record<string, Quote>;
 }): Promise<SeriesPoint> {
   const { holdings, cash, period, quotes } = payload;
-  if (!holdings.length) return { series: [], labels: [] };
-  if (period === "1D") {
-    const minuteMap = new Map<string, Map<string, number>>();
-    await Promise.all(
-      holdings.map(async (holding) => {
-        if (!hasKlineMarket(holding.instrument.market)) return;
-        const points = await getMinute(holding.instrument.code).catch(() => []);
-        if (!points.length) return;
-        minuteMap.set(
-          holding.instrument.code,
-          new Map(points.map((point) => [point.time, point.close])),
-        );
-      }),
-    );
-    return buildIntradaySeries(holdings, cash, minuteMap, quotes);
-  }
-
-  const closesMap = new Map<string, Map<string, number>>();
-  await Promise.all(
-    holdings.map(async (holding) => {
-      if (hasKlineMarket(holding.instrument.market)) {
-        const points = await getKline(holding.instrument.code).catch(() => []);
-        if (points.length) {
-          closesMap.set(
-            holding.instrument.code,
-            new Map(points.map((point) => [point.date, point.close])),
-          );
-        }
-      } else if (holding.instrument.market?.toLowerCase() === "jj") {
-        const points = await getFundNav(holding.instrument.code).catch(() => []);
-        if (points.length) {
-          closesMap.set(
-            holding.instrument.code,
-            new Map(points.map((point) => [point.date, point.nav])),
-          );
-        }
-      }
-    }),
-  );
-  return buildDailySeries(holdings, cash, closesMap, period, quotes);
+  const history = createPortfolioHistory({
+    port: { getKline, getMinute, getFundNav },
+    hasKlineMarket,
+  });
+  return history.buildSeries({ holdings, cash, period, quotes });
 }
 
 export async function getIndices(quotes: Record<string, Quote> = {}): Promise<IndexQuote[]> {

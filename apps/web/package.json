@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
+    "@tidal/core": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "next": "16.2.6",
     "react": "catalog:",

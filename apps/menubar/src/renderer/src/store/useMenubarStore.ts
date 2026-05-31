@@ -86,7 +86,12 @@ export function useResolvedTheme(): ResolvedTheme {
 export function usePortfolioDerived() {
   const config = useConfig();
   const quotes = useMenubarStore((state) => state.quotes);
-  return derivePortfolio(config.holdings, config.watch, config.cash, quotes);
+  return derivePortfolio({
+    holdings: config.holdings,
+    watch: config.watch,
+    cash: config.cash,
+    quotes,
+  });
 }
 
 export function useQuoteInstruments(): Instrument[] {

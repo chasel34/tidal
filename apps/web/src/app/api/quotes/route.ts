@@ -11,9 +11,7 @@ export async function POST(req: Request) {
     const quotes = await fetchQuotes(items);
     return NextResponse.json({ quotes });
   } catch (e) {
-    return NextResponse.json(
-      { quotes: [], error: (e as Error).message },
-      { status: 502 }
-    );
+    console.error("[api/quotes] quote refresh failed", e);
+    throw e;
   }
 }

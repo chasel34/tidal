@@ -365,6 +365,9 @@ function setupIpc() {
 }
 
 app.setName("Tidal");
+if (process.env.TIDAL_E2E_USER_DATA) {
+  app.setPath("userData", process.env.TIDAL_E2E_USER_DATA);
+}
 setupIpc();
 
 void app.whenReady().then(async () => {
@@ -385,9 +388,14 @@ void app.whenReady().then(async () => {
   } else {
     tray.setContextMenu(trayMenu);
   }
-  createPopoverWindow();
+  const popover = createPopoverWindow();
   const config = await loadConfig();
   if (config.launchAtLogin) setLoginItem(true);
+  if (process.env.TIDAL_E2E_SHOW === "popover") {
+    positionPopover(popover);
+    popover.show();
+    popover.focus();
+  }
 });
 
 app.on("window-all-closed", () => {});
