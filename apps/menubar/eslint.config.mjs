@@ -1,9 +1,10 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
+import { sharedIgnores } from "../../eslint.config.base.mjs";
 
 export default tseslint.config(
-  { ignores: ["out", "dist", "node_modules"] },
+  { ignores: sharedIgnores },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
