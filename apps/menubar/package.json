@@ -49,6 +49,8 @@
     },
     "publish": {
       "provider": "github",
+      "owner": "chasel34",
+      "repo": "tidal",
       "tagNamePrefix": "menubar-v",
       "releaseType": "draft"
     }
