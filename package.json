@@ -14,6 +14,10 @@
     "lint:menubar": "pnpm -F @tidal/menubar lint",
     "test": "pnpm -F @tidal/web test",
     "test:menubar": "pnpm -F @tidal/menubar test",
-    "test:ui": "pnpm -F @tidal/web test:ui"
+    "test:ui": "pnpm -F @tidal/web test:ui",
+    "dist:menubar": "pnpm -F @tidal/menubar dist",
+    "dist:menubar:dmg": "pnpm -F @tidal/menubar dist:dmg",
+    "dist:menubar:zip": "pnpm -F @tidal/menubar dist:zip",
+    "dist:menubar:dir": "pnpm -F @tidal/menubar dist:dir"
   }
 }
