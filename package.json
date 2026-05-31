@@ -11,6 +11,7 @@
     "test": "pnpm -r test",
     "start": "pnpm -F @tidal/web start",
     "test:ui": "pnpm -F @tidal/web test:ui",
-    "dist:menubar": "pnpm -F @tidal/menubar dist"
+    "dist:menubar": "pnpm -F @tidal/menubar dist",
+    "release:menubar": "git tag menubar-v$(node -p \"require('./apps/menubar/package.json').version\") && git push origin menubar-v$(node -p \"require('./apps/menubar/package.json').version\")"
   }
 }

@@ -11,6 +11,7 @@
     "dist:dmg": "electron-vite build && electron-builder --mac dmg --publish never",
     "dist:zip": "electron-vite build && electron-builder --mac zip --publish never",
     "dist": "electron-vite build && electron-builder --mac --publish never",
+    "dist:release": "electron-vite build && electron-builder --mac --publish always",
     "start": "electron-vite preview",
     "lint": "eslint .",
     "test": "vitest run"
@@ -46,6 +47,11 @@
       "extendInfo": {
         "LSUIElement": true
       }
+    },
+    "publish": {
+      "provider": "github",
+      "tagNamePrefix": "menubar-v",
+      "releaseType": "draft"
     }
   },
   "dependencies": {
