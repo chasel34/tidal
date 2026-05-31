@@ -7,10 +7,10 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "tsc --noEmit && electron-vite build",
-    "dist:dir": "electron-vite build && electron-builder --mac --arm64 --dir --publish never",
-    "dist:dmg": "electron-vite build && electron-builder --mac dmg --arm64 --publish never",
-    "dist:zip": "electron-vite build && electron-builder --mac zip --arm64 --publish never",
-    "dist": "electron-vite build && electron-builder --mac --arm64 --publish never",
+    "dist:dir": "electron-vite build && electron-builder --mac --dir --publish never",
+    "dist:dmg": "electron-vite build && electron-builder --mac dmg --publish never",
+    "dist:zip": "electron-vite build && electron-builder --mac zip --publish never",
+    "dist": "electron-vite build && electron-builder --mac --publish never",
     "start": "electron-vite preview",
     "lint": "eslint .",
     "test": "vitest run"
