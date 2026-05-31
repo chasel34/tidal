@@ -2,6 +2,22 @@
 
 一款运行在浏览器中的个人投资组合看板，无需注册、无需服务器，数据保存在本地。支持 A 股、ETF、场外基金等品种的持仓管理与行情自选。
 
+## 下载
+
+菜单栏看板（macOS，Apple Silicon）：[Releases 页面](https://github.com/chasel34/tidal/releases)
+
+下载 `.dmg` 安装包或 `.zip` 压缩包，目前仅支持 Apple Silicon（arm64）。
+
+> **macOS 安全提示**
+>
+> 本应用未经 Apple 公证，首次打开时系统会提示"无法打开，因为无法验证开发者"。绕过方式：
+>
+> **方式一（推荐）**：在 Finder 中右键点击应用图标 → 选择「打开」→ 再次点击「打开」确认。
+>
+> **方式二**：在「系统设置 → 隐私与安全性」底部点击「仍要打开」。
+>
+> **方式三**：终端执行 `xattr -cr /Applications/Tidal.app`，随后正常双击打开。
+
 ## 功能
 
 ### 今日总览
@@ -113,6 +129,16 @@ eslint.config.base.mjs   # 共享 eslint 忽略规则
 pnpm-workspace.yaml      # workspace + 依赖 catalog（共享版本）
 docs/adr/                # 架构决策记录
 ```
+
+## 发布流程（菜单栏看板）
+
+1. 更新 `apps/menubar/package.json` 中的 `version` 字段
+2. 提交变更：`git commit -am "chore: bump menubar version to x.y.z"`
+3. 打标签并推送：`pnpm release:menubar`
+4. GitHub Actions 自动构建并创建 Draft Release（约 2 分钟）
+5. 在 [Releases 页面](https://github.com/chasel34/tidal/releases) 补充 Release Notes，确认产物无误后点击「Publish release」
+
+标签格式为 `menubar-vX.Y.Z`，产物包含 `.dmg` 和 `.zip` 两种格式。
 
 ## 数据说明
 
