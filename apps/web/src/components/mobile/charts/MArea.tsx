@@ -99,7 +99,8 @@ export function MArea({
   }
 
   const xLabels = labels ?? [];
-  const xLabelIdxs = [0, Math.floor((series.length - 1) / 2), series.length - 1];
+  // de-dup so a short series (length ≤ 2) doesn't collide on the same index/key
+  const xLabelIdxs = [...new Set([0, Math.floor((series.length - 1) / 2), series.length - 1])];
 
   return (
     <div
