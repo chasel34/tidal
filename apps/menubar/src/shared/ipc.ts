@@ -1,3 +1,4 @@
+import type { ExtractedRow, ResolvedOcrConfig } from "@tidal/core";
 import type {
   FundNavPoint,
   FundProfile,
@@ -70,6 +71,7 @@ export interface TidalApi {
   openSettings: () => Promise<void>;
   refreshQuotes: (items: Instrument[], config: MenubarConfig) => Promise<Quote[]>;
   search: (q: string) => Promise<SearchResultDTO[]>;
+  ocrExtract: (imageDataUrl: string, cfg: ResolvedOcrConfig) => Promise<ExtractedRow[]>;
   getKline: (code: string) => Promise<KlinePoint[]>;
   getMinute: (code: string) => Promise<MinutePoint[]>;
   getFundNav: (code: string) => Promise<FundNavPoint[]>;

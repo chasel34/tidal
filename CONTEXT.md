@@ -45,3 +45,18 @@ A compact, glanceable dashboard surface for 持仓, 自选, market indices, and 
 ### 价格提醒
 
 A user-defined threshold rule for an instrument. 价格提醒 becomes relevant when live Quote data crosses the configured threshold.
+
+### 截图导入
+
+The flow that turns a screenshot of a broker / wealth app holdings (or watch) list into 持仓 or 自选. A multimodal model reads the instruments off the image, each recognized row is matched to a real instrument and shown in an editable 二次确认 step, and only confirmed rows are written to the Store.
+_避免_: OCR 导入, 扫描导入
+
+### 持仓反推
+
+The rule for recovering the 份额 and 成本 a 持仓 requires from the only fields a holdings screenshot actually shows — 市值 and 持有收益 — by combining them with live Quote data at import time. The recovered 份额 is an estimate, so the dashboard's recomputed 市值 may not match the screenshot exactly.
+_避免_: 换算, 折算
+
+### AI 识别配置
+
+The user's own multimodal-model credential set (provider, API key, base URL, model id) that powers 截图导入. BYOK and single-active-provider. 仅本地存储 on each surface and deliberately excluded from the export/import backup so the key never travels in a shareable file.
+_避免_: OCR 设置, 模型配置

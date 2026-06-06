@@ -1,6 +1,7 @@
 import { app, dialog } from "electron";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { aiDefaultState, aiNormalize } from "@tidal/core";
 import { DEFAULT_CONFIG } from "@shared/constants";
 import type {
   HoldingItem,
@@ -128,6 +129,7 @@ export function normalizeConfig(input: unknown): MenubarConfig {
       ? src.watch.map(normalizeWatch).filter((w): w is WatchItem => Boolean(w))
       : base.watch,
     cash: Number.isFinite(Number(src.cash)) ? Number(src.cash) : base.cash,
+    ai: aiNormalize(src.ai),
   };
 }
 
@@ -150,13 +152,13 @@ export async function saveConfig(config: MenubarConfig): Promise<MenubarConfig> 
   return normalized;
 }
 
-function fromMenubarImport(input: unknown): MenubarConfig | null {
+function fromMenubarImport(current: MenubarConfig, input: unknown): MenubarConfig | null {
   if (!isRecord(input)) return null;
   if (input.app === "tidal-menubar" && isRecord(input.config)) {
-    return normalizeConfig(input.config);
+    return normalizeConfig({ ...input.config, ai: current.ai });
   }
   if (input.schema === "tidal-menubar-config") {
-    return normalizeConfig(input);
+    return normalizeConfig({ ...input, ai: current.ai });
   }
   return null;
 }
@@ -208,7 +210,7 @@ export async function importConfigFromDialog(current: MenubarConfig): Promise<{
   try {
     const raw = await readFile(result.filePaths[0], "utf8");
     const parsed = JSON.parse(raw) as unknown;
-    const menubar = fromMenubarImport(parsed);
+    const menubar = fromMenubarImport(current, parsed);
     const config = menubar ?? mergeWebState(current, parsed) ?? mergeWebExportEnvelope(current, parsed);
     if (!config) {
       return { canceled: false, message: "无法识别的 Tidal JSON 格式" };
@@ -239,7 +241,8 @@ export async function exportConfigToDialog(config: MenubarConfig): Promise<{
   const payload: MenubarExport = {
     app: "tidal-menubar",
     exportedAt: new Date().toISOString(),
-    config: normalizeConfig(config),
+    // AI 识别配置 (含 API Key) 不进可分享的备份文件 (ADR 0005)。
+    config: { ...normalizeConfig(config), ai: aiDefaultState() },
   };
   await writeFile(result.filePath, JSON.stringify(payload, null, 2), "utf8");
   return { canceled: false, path: result.filePath };

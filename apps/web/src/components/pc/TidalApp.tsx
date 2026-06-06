@@ -10,6 +10,8 @@ import { HoldingsPane } from "@/components/pc/panes/HoldingsPane";
 import { WatchPane } from "@/components/pc/panes/WatchPane";
 import { AddWatchModal } from "@/components/pc/modals/AddWatchModal";
 import { HoldingModal } from "@/components/pc/modals/HoldingModal";
+import { OcrImportModal } from "@/components/pc/modals/OcrImportModal";
+import { AiSettingsModal } from "@/components/pc/modals/AiSettingsModal";
 import type { ModalState } from "@/components/pc/panes/types";
 
 export function TidalApp() {
@@ -38,7 +40,7 @@ export function TidalApp() {
         overflow: "hidden",
       }}
     >
-      <Sidebar P={P} indices={indices} />
+      <Sidebar P={P} indices={indices} onOpenAiSettings={() => setModal({ type: "aiSettings" })} />
 
       <main style={{ overflowY: "auto", overflowX: "hidden" }}>
         <div style={{ padding: "30px 40px 48px", maxWidth: 1080, margin: "0 auto" }}>
@@ -53,6 +55,17 @@ export function TidalApp() {
       )}
       {modal?.type === "holding" && (
         <HoldingModal P={P} editCode={modal.code} onClose={() => setModal(null)} />
+      )}
+      {modal?.type === "ocr" && (
+        <OcrImportModal
+          P={P}
+          defaultTarget={modal.target}
+          onOpenSettings={() => setModal({ type: "aiSettings" })}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "aiSettings" && (
+        <AiSettingsModal P={P} onClose={() => setModal(null)} />
       )}
     </div>
   );

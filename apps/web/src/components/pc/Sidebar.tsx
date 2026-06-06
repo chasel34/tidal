@@ -28,7 +28,15 @@ function SideLabel({ children, P }: { children: React.ReactNode; P: Palette }) {
   );
 }
 
-export function Sidebar({ P, indices }: { P: Palette; indices: IndexQuote[] }) {
+export function Sidebar({
+  P,
+  indices,
+  onOpenAiSettings,
+}: {
+  P: Palette;
+  indices: IndexQuote[];
+  onOpenAiSettings: () => void;
+}) {
   const theme = useStore((state) => state.theme);
   const setTheme = useStore((state) => state.setTheme);
   const tab = useStore((state) => state.tab);
@@ -72,7 +80,24 @@ export function Sidebar({ P, indices }: { P: Palette; indices: IndexQuote[] }) {
           </div>
           <div style={{ fontSize: 14.5, color: P.text }}>我的看板</div>
         </div>
-        <ThemeToggle theme={theme} setTheme={setTheme} P={P} />
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <button
+            onClick={onOpenAiSettings}
+            title="智能识别设置"
+            style={{
+              background: "transparent",
+              border: "none",
+              color: P.muted,
+              fontSize: 16,
+              cursor: "pointer",
+              padding: 4,
+              lineHeight: 1,
+            }}
+          >
+            ⚙
+          </button>
+          <ThemeToggle theme={theme} setTheme={setTheme} P={P} />
+        </div>
       </div>
 
       <div>

@@ -106,6 +106,12 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
             onChange={handleFileChange}
           />
           <button
+            onClick={() => openModal({ type: "ocr", target: "holding" })}
+            style={tidalBtn(P)}
+          >
+            ⎙ 截图导入
+          </button>
+          <button
             onClick={() => openModal({ type: "holding" })}
             style={tidalBtn(P, "primary")}
           >

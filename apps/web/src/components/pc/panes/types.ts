@@ -1,8 +1,11 @@
 import type { Instrument } from "@/lib/types";
+import type { OcrTarget } from "@/hooks/useOcrImport";
 
 export type ModalState =
   | { type: "watch" }
   | { type: "holding"; code?: string }
+  | { type: "ocr"; target?: OcrTarget }
+  | { type: "aiSettings" }
   | null;
 
 export interface PaneProps {

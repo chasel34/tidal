@@ -1,5 +1,11 @@
 import { INDICES } from "@shared/constants";
-import { createPortfolioHistory } from "@tidal/core";
+import {
+  buildScreenshotRequest,
+  createPortfolioHistory,
+  extractRowsFromResponse,
+  type ExtractedRow,
+  type ResolvedOcrConfig,
+} from "@tidal/core";
 import type {
   FundNavPoint,
   FundProfile,
@@ -51,6 +57,24 @@ export async function refreshQuotes(
   const quotes = await fetchQuotes(items);
   checkPriceAlerts(config, quotes);
   return quotes;
+}
+
+/**
+ * 截图导入 transport for the menubar — the main process calls 火山 directly so
+ * the renderer never needs cross-origin access; the key stays on this machine.
+ */
+export async function ocrExtract(
+  imageDataUrl: string,
+  cfg: ResolvedOcrConfig,
+): Promise<ExtractedRow[]> {
+  const req = buildScreenshotRequest(imageDataUrl, cfg);
+  const res = await fetch(req.url, { method: "POST", headers: req.headers, body: req.body });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`识别请求失败：${res.status}${detail ? ` · ${detail.slice(0, 160)}` : ""}`);
+  }
+  const json = (await res.json()) as unknown;
+  return extractRowsFromResponse(json);
 }
 
 export async function search(q: string): Promise<SearchResultDTO[]> {

@@ -1,3 +1,4 @@
+import { aiDefaultState } from "@tidal/core";
 import type { Instrument, MenubarConfig, Period } from "./types";
 
 export const DASHBOARD_URL = "https://tidal-murex.vercel.app/";
@@ -32,4 +33,5 @@ export const DEFAULT_CONFIG: MenubarConfig = {
   holdings: [],
   watch: [],
   cash: 0,
+  ai: aiDefaultState(),
 };

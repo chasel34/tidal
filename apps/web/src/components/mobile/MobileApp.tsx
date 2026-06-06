@@ -14,8 +14,16 @@ import { MStockDetail } from "@/components/mobile/screens/MStockDetail";
 import { MFundDetail } from "@/components/mobile/screens/MFundDetail";
 import { MAddWatchSheet } from "@/components/mobile/sheets/MAddWatchSheet";
 import { MHoldingSheet } from "@/components/mobile/sheets/MHoldingSheet";
+import { MOcrImportSheet } from "@/components/mobile/sheets/MOcrImportSheet";
+import { MAiSettingsSheet } from "@/components/mobile/sheets/MAiSettingsSheet";
+import type { OcrTarget } from "@/hooks/useOcrImport";
 
-type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
+type SheetState =
+  | { type: "watch" }
+  | { type: "holding"; code?: string }
+  | { type: "ocr"; target?: OcrTarget }
+  | { type: "aiSettings" }
+  | null;
 
 export function MobileApp() {
   const P = usePalette();
@@ -84,12 +92,20 @@ export function MobileApp() {
       topSub = `${sortedWatch.length} 只关注`;
     }
     topRight = (
-      <button
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 26, color: P.muted }}
-      >
-        {theme === "dark" ? "☀" : "☾"}
-      </button>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <button
+          onClick={() => setSheet({ type: "aiSettings" })}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: P.muted }}
+        >
+          ⚙
+        </button>
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 26, color: P.muted }}
+        >
+          {theme === "dark" ? "☀" : "☾"}
+        </button>
+      </div>
     );
   }
 
@@ -116,6 +132,15 @@ export function MobileApp() {
       {/* Sheets */}
       {sheet?.type === "watch" && <MAddWatchSheet P={P} onClose={closeSheet} />}
       {sheet?.type === "holding" && <MHoldingSheet P={P} onClose={closeSheet} editCode={sheet.code} />}
+      {sheet?.type === "ocr" && (
+        <MOcrImportSheet
+          P={P}
+          defaultTarget={sheet.target}
+          onOpenSettings={() => setSheet({ type: "aiSettings" })}
+          onClose={closeSheet}
+        />
+      )}
+      {sheet?.type === "aiSettings" && <MAiSettingsSheet P={P} onClose={closeSheet} />}
     </MShell>
   );
 }

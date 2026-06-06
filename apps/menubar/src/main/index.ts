@@ -20,12 +20,14 @@ import {
   loadConfig,
   saveConfig,
 } from "./config-store";
+import type { ResolvedOcrConfig } from "@tidal/core";
 import {
   getFundNav,
   getFundProfile,
   getKline,
   getMinute,
   getPortfolioSeries,
+  ocrExtract,
   refreshQuotes,
   search,
 } from "./data-service";
@@ -349,6 +351,9 @@ function setupIpc() {
     return quotes;
   });
   ipcMain.handle("market:search", (_event, q: string) => search(q));
+  ipcMain.handle("ocr:extract", (_event, imageDataUrl: string, cfg: ResolvedOcrConfig) =>
+    ocrExtract(imageDataUrl, cfg),
+  );
   ipcMain.handle("market:kline", (_event, code: string) => getKline(code));
   ipcMain.handle("market:minute", (_event, code: string) => getMinute(code));
   ipcMain.handle("market:fundNav", (_event, code: string) => getFundNav(code));

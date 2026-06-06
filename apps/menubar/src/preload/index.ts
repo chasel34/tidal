@@ -28,6 +28,7 @@ const api: TidalApi = {
   openSettings: () => ipcRenderer.invoke("window:openSettings"),
   refreshQuotes: (items, config) => ipcRenderer.invoke("market:quotes", items, config),
   search: (q) => ipcRenderer.invoke("market:search", q),
+  ocrExtract: (imageDataUrl, cfg) => ipcRenderer.invoke("ocr:extract", imageDataUrl, cfg),
   getKline: (code) => ipcRenderer.invoke("market:kline", code),
   getMinute: (code) => ipcRenderer.invoke("market:minute", code),
   getFundNav: (code) => ipcRenderer.invoke("market:fundNav", code),

@@ -4,14 +4,17 @@ import {
   Download,
   Info,
   PanelTop,
+  ScanLine,
   Search,
   SlidersHorizontal,
+  Sparkles,
   SunMoon,
   Upload,
   Wallet,
   Waves,
   X,
 } from "lucide-react";
+import { aiResolve, OCR_PROVIDER_MAP } from "@tidal/core";
 import { cFmtCompact, cFmtMoney, cFmtNum, cFmtPct } from "@shared/format";
 import { moveColor } from "@shared/theme";
 import { typeLabel, unitLabel } from "@shared/portfolio";
@@ -24,16 +27,19 @@ import type {
   ThemeMode,
 } from "@shared/types";
 import { Card, CalmSwitch, GhostButton, GroupLabel, PrimaryButton, Row, Segmented, SelectBox } from "./Controls";
+import { OcrImportModal } from "./OcrImportModal";
+import type { OcrTarget } from "@/hooks/useOcrImport";
 import { usePalette } from "@/hooks/usePalette";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useConfig, useMenubarStore, usePortfolioDerived, useResolvedTheme } from "@/store/useMenubarStore";
 
-type Pane = "general" | "appearance" | "menubar" | "notify" | "portfolio" | "about";
+type Pane = "general" | "appearance" | "menubar" | "ai" | "notify" | "portfolio" | "about";
 
 const PANES: { id: Pane; label: string; icon: ReactNode }[] = [
   { id: "general", label: "通用", icon: <SlidersHorizontal size={16} /> },
   { id: "appearance", label: "外观", icon: <SunMoon size={16} /> },
   { id: "menubar", label: "菜单栏", icon: <PanelTop size={16} /> },
+  { id: "ai", label: "智能识别", icon: <Sparkles size={16} /> },
   { id: "notify", label: "通知提醒", icon: <Bell size={16} /> },
   { id: "portfolio", label: "持仓与自选", icon: <Wallet size={16} /> },
   { id: "about", label: "关于", icon: <Info size={16} /> },
@@ -151,7 +157,7 @@ function SearchPicker({
   );
 }
 
-function PortfolioPane() {
+function PortfolioPane({ onImport }: { onImport: () => void }) {
   const P = usePalette();
   const config = useConfig();
   const theme = useResolvedTheme();
@@ -174,7 +180,23 @@ function PortfolioPane() {
 
   return (
     <>
-      <GroupLabel P={P}>持仓</GroupLabel>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <GroupLabel P={P}>持仓</GroupLabel>
+        <button
+          onClick={onImport}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: P.accent,
+            cursor: "pointer",
+            fontSize: 12,
+            marginBottom: 8,
+          }}
+        >
+          <ScanLine size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+          截图导入
+        </button>
+      </div>
       <Card P={P} style={{ marginBottom: 18 }}>
         {holdingsFull.length === 0 && <div style={{ padding: 16, color: P.subtle, fontSize: 12.5, textAlign: "center" }}>暂无持仓</div>}
         {holdingsFull.map((h) => (
@@ -338,6 +360,153 @@ function NotifyPane() {
   );
 }
 
+// 16×16 PNG used to ping the provider when testing the connection
+// (火山 rejects images smaller than 14px).
+const PING_PNG =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFElEQVR42mP4TyJgGNUwqmH4agAAr639H23ooMoAAAAASUVORK5CYII=";
+
+function AiPane({ onImport }: { onImport: (target: OcrTarget) => void }) {
+  const P = usePalette();
+  const config = useConfig();
+  const patch = useMenubarStore((state) => state.patchConfig);
+  const provider = OCR_PROVIDER_MAP[config.ai.activeProvider];
+  const cfg = config.ai.providers[config.ai.activeProvider];
+  const [showKey, setShowKey] = useState(false);
+  const [test, setTest] = useState<{ loading: boolean; ok?: boolean; msg?: string }>({
+    loading: false,
+  });
+
+  const setField = (field: "apiKey" | "baseURL" | "model", value: string) =>
+    void patch({
+      ai: {
+        ...config.ai,
+        providers: {
+          ...config.ai.providers,
+          [config.ai.activeProvider]: { ...cfg, [field]: value },
+        },
+      },
+    });
+
+  const runTest = async () => {
+    setTest({ loading: true });
+    try {
+      if (!cfg.apiKey.trim()) throw new Error("请先填写 API Key");
+      await window.tidal.ocrExtract(PING_PNG, aiResolve(config.ai));
+      setTest({ loading: false, ok: true, msg: "连接成功，识别模型可用" });
+    } catch (e) {
+      setTest({ loading: false, ok: false, msg: e instanceof Error ? e.message : "连接失败" });
+    }
+  };
+
+  return (
+    <>
+      <div style={{ fontSize: 12.5, color: P.muted, marginBottom: 16, lineHeight: 1.6 }}>
+        截图导入由你自己的多模态模型驱动（BYOK）。API Key 只保存在本机，绝不经过中转服务器，也不进备份文件。
+      </div>
+      <Card P={P} style={{ marginBottom: 18 }}>
+        <div style={{ padding: 14 }}>
+          <label style={{ fontSize: 12, color: P.muted }}>
+            API Key
+            <div style={{ position: "relative", marginTop: 5 }}>
+              <input
+                type={showKey ? "text" : "password"}
+                value={cfg.apiKey}
+                onChange={(e) => setField("apiKey", e.target.value)}
+                placeholder={provider.keyPlaceholder}
+                style={{ ...inputStyle(P), marginTop: 0, paddingRight: 52 }}
+              />
+              <button
+                onClick={() => setShowKey((v) => !v)}
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  color: P.subtle,
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                {showKey ? "隐藏" : "显示"}
+              </button>
+            </div>
+          </label>
+          <div style={{ fontSize: 11, color: P.subtle, marginTop: 5 }}>{provider.docHint}</div>
+
+          <label style={{ fontSize: 12, color: P.muted, display: "block", marginTop: 14 }}>
+            识别模型
+            <input
+              value={cfg.model}
+              onChange={(e) => setField("model", e.target.value)}
+              placeholder={provider.defaultModel}
+              style={inputStyle(P)}
+            />
+          </label>
+          <div style={{ fontSize: 11, color: P.subtle, marginTop: 5 }}>{provider.modelHint}</div>
+
+          <label style={{ fontSize: 12, color: P.muted, display: "block", marginTop: 14 }}>
+            API 域名（可选）
+            <input
+              value={cfg.baseURL}
+              onChange={(e) => setField("baseURL", e.target.value)}
+              placeholder={provider.defaultBaseURL}
+              style={inputStyle(P)}
+            />
+          </label>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
+            <GhostButton P={P} onClick={runTest}>
+              {test.loading ? "测试中…" : "测试连接"}
+            </GhostButton>
+            {test.msg && (
+              <span
+                style={{
+                  fontSize: 12,
+                  color: test.ok
+                    ? P.isDark
+                      ? "#6ecf6e"
+                      : "#2a7a2a"
+                    : P.isDark
+                      ? "#cf6e6e"
+                      : "#9a2a2a",
+                }}
+              >
+                {test.ok ? "✓ " : "⚠ "}
+                {test.msg}
+              </span>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      <Card P={P} style={{ marginBottom: 18 }}>
+        <Row label="截图导入" sub="从持仓截图识别并导入到持仓或自选" P={P} last>
+          <PrimaryButton P={P} onClick={() => onImport("holding")}>
+            <ScanLine size={13} style={{ verticalAlign: -2, marginRight: 5 }} />
+            开始导入
+          </PrimaryButton>
+        </Row>
+      </Card>
+
+      <div
+        style={{
+          fontSize: 11.5,
+          color: P.subtle,
+          lineHeight: 1.6,
+          padding: "11px 13px",
+          borderRadius: 10,
+          background: P.isDark ? "#16161a" : "#faf9f5",
+          border: `1px solid ${P.line}`,
+        }}
+      >
+        ⚠ 隐私提示：使用 AI 识别时，你上传的持仓截图会发送至所选服务商（{provider.name}）进行识别。
+      </div>
+    </>
+  );
+}
+
 export function SettingsApp() {
   const P = usePalette();
   const config = useConfig();
@@ -347,6 +516,7 @@ export function SettingsApp() {
   const { holdingsFull, summary } = usePortfolioDerived();
   const [pane, setPane] = useState<Pane>("appearance");
   const [msg, setMsg] = useState<string | null>(null);
+  const [ocr, setOcr] = useState<OcrTarget | null>(null);
   useQuotes();
   const move = (value: number) => moveColor(value, theme, config.conv);
   const cur = PANES.find((p) => p.id === pane)!;
@@ -492,8 +662,9 @@ export function SettingsApp() {
             </>
           )}
 
+          {pane === "ai" && <AiPane onImport={(t) => setOcr(t)} />}
           {pane === "notify" && <NotifyPane />}
-          {pane === "portfolio" && <PortfolioPane />}
+          {pane === "portfolio" && <PortfolioPane onImport={() => setOcr("holding")} />}
 
           {pane === "about" && (
             <Card P={P}>
@@ -516,6 +687,17 @@ export function SettingsApp() {
           )}
         </div>
       </div>
+
+      {ocr && (
+        <OcrImportModal
+          defaultTarget={ocr}
+          onClose={() => setOcr(null)}
+          onOpenSettings={() => {
+            setOcr(null);
+            setPane("ai");
+          }}
+        />
+      )}
     </div>
   );
 }

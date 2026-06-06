@@ -10,7 +10,12 @@ import { MEmpty } from "@/components/mobile/ui/MEmpty";
 import { Spark } from "@/components/shared/charts/Spark";
 import type { WatchSortKey } from "@/lib/types";
 
-type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
+type SheetState =
+  | { type: "watch" }
+  | { type: "holding"; code?: string }
+  | { type: "ocr"; target?: "holding" | "watch" }
+  | { type: "aiSettings" }
+  | null;
 
 interface MWatchProps {
   goDetail: (code: string) => void;
@@ -127,6 +132,25 @@ export function MWatch({ goDetail, openSheet }: MWatchProps) {
       >
         <span style={{ fontSize: 18 }}>⌕</span>
         搜索添加自选
+      </button>
+      <button
+        onClick={() => openSheet({ type: "ocr", target: "watch" })}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          width: "100%",
+          padding: "12px 14px",
+          background: "transparent",
+          border: `1px dashed ${P.line}`,
+          borderRadius: 12,
+          cursor: "pointer",
+          color: P.muted,
+          fontSize: 15,
+        }}
+      >
+        <span style={{ fontSize: 18 }}>⎙</span>
+        截图导入自选
       </button>
 
       {/* Sort chips */}

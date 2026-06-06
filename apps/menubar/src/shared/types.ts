@@ -1,3 +1,5 @@
+import type { AiByokState } from "@tidal/core";
+
 export type ResolvedTheme = "light" | "dark";
 export type ThemeMode = ResolvedTheme | "auto";
 export type ColorConvention = "redUp" | "greenUp";
@@ -170,6 +172,8 @@ export interface MenubarConfig {
   holdings: HoldingItem[];
   watch: WatchItem[];
   cash: number;
+  /** AI 识别配置 (BYOK) — local-only, excluded from MenubarExport (ADR 0005). */
+  ai: AiByokState;
 }
 
 export interface MenubarExport {
