@@ -7,7 +7,12 @@ import { MCard } from "@/components/mobile/ui/MCard";
 import { MEmpty } from "@/components/mobile/ui/MEmpty";
 import type { HoldingSortKey } from "@/lib/types";
 
-type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
+type SheetState =
+  | { type: "watch" }
+  | { type: "holding"; code?: string }
+  | { type: "ocr"; target?: "holding" | "watch" }
+  | { type: "aiSettings" }
+  | null;
 
 interface MHoldingsProps {
   goDetail: (code: string) => void;
@@ -117,22 +122,41 @@ export function MHoldings({ goDetail, openSheet }: MHoldingsProps) {
         ))}
       </MCard>
 
-      {/* Add button */}
-      <button
-        onClick={() => openSheet({ type: "holding" })}
-        style={{
-          padding: "14px",
-          borderRadius: 14,
-          border: `2px dashed ${P.line}`,
-          background: "transparent",
-          color: P.accent,
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        ＋ 添加持仓
-      </button>
+      {/* Add buttons */}
+      <div style={{ display: "flex", gap: 10 }}>
+        <button
+          onClick={() => openSheet({ type: "ocr", target: "holding" })}
+          style={{
+            flex: 1,
+            padding: "14px",
+            borderRadius: 14,
+            border: `2px dashed ${P.line}`,
+            background: "transparent",
+            color: P.muted,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          ⎙ 截图导入
+        </button>
+        <button
+          onClick={() => openSheet({ type: "holding" })}
+          style={{
+            flex: 1,
+            padding: "14px",
+            borderRadius: 14,
+            border: `2px dashed ${P.line}`,
+            background: "transparent",
+            color: P.accent,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          ＋ 添加持仓
+        </button>
+      </div>
     </div>
   );
 }

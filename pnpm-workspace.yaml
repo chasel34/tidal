@@ -1,7 +1,30 @@
 packages:
   - 'apps/*'
+  - 'packages/*'
+
+catalog:
+  # runtime (shared)
+  react: 19.2.6
+  react-dom: 19.2.6
+  '@base-ui/react': ^1.5.0
+  '@tanstack/react-query': ^5.100.14
+  zustand: ^5.0.13
+  stock-sdk: ^1.10.0
+  # tooling (shared, newest-that-works)
+  typescript: ^6.0.3
+  '@types/node': ^25.9.1
+  '@types/react': ^19.2.15
+  '@types/react-dom': ^19.2.3
+  '@vitejs/plugin-react': ^6.0.2
+  vitest: ^4.1.7
+  # eslint pinned to ^9 (not ^10): eslint-config-next@16.2.6 bundles
+  # eslint-plugin-react@7.37.5, which breaks on eslint 10's rule-context API.
+  eslint: ^9
 
 allowBuilds:
+  electron: true
+  esbuild: true
+  electron-winstaller: true
   sharp: true
   unrs-resolver: true
 

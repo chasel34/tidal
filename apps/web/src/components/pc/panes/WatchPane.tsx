@@ -97,6 +97,12 @@ export function WatchPane({ P, openModal }: { P: Palette } & PaneProps) {
             style={{ display: "none" }}
             onChange={handleFileChange}
           />
+          <button
+            onClick={() => openModal({ type: "ocr", target: "watch" })}
+            style={tidalBtn(P)}
+          >
+            ⎙ 截图导入
+          </button>
           <button onClick={() => openModal({ type: "watch" })} style={tidalBtn(P, "primary")}>
             ＋ 添加自选
           </button>

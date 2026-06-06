@@ -12,6 +12,10 @@ out/
 
 # production
 build/
+!apps/menubar/build/
+!apps/menubar/build/icon.svg
+!apps/menubar/build/icon.png
+!apps/menubar/build/icon.icns
 
 # misc
 .DS_Store
@@ -34,4 +38,4 @@ yarn-error.log*
 next-env.d.ts
 
 # Local tool configs
-.claude/
+.claude/settings.local.json

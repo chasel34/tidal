@@ -5,10 +5,13 @@
   "packageManager": "pnpm@11.3.0",
   "scripts": {
     "dev": "pnpm -F @tidal/web dev",
-    "build": "pnpm -F @tidal/web build",
+    "dev:menubar": "pnpm -F @tidal/menubar dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
     "start": "pnpm -F @tidal/web start",
-    "lint": "pnpm -F @tidal/web lint",
-    "test": "pnpm -F @tidal/web test",
-    "test:ui": "pnpm -F @tidal/web test:ui"
+    "test:ui": "pnpm -F @tidal/web test:ui",
+    "dist:menubar": "pnpm -F @tidal/menubar dist",
+    "release:menubar": "git tag menubar-v$(node -p \"require('./apps/menubar/package.json').version\") && git push origin menubar-v$(node -p \"require('./apps/menubar/package.json').version\")"
   }
 }

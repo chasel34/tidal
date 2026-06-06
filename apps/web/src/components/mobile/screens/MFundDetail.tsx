@@ -49,7 +49,7 @@ function MAllocBar({ segments, P }: { segments: FundAllocSegment[]; P: ReturnTyp
   );
 }
 
-export function MFundDetail({ code, onBack: _onBack, openSheet }: MFundDetailProps) {
+export function MFundDetail({ code, openSheet }: MFundDetailProps) {
   const P = usePalette();
   const theme = useStore((state) => state.theme);
   const quotes = useStore((state) => state.quotes);

@@ -1,0 +1,84 @@
+{
+  "name": "@tidal/menubar",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "tsc --noEmit && electron-vite build",
+    "dist:dir": "electron-vite build && electron-builder --mac --dir --publish never",
+    "dist:dmg": "electron-vite build && electron-builder --mac dmg --publish never",
+    "dist:zip": "electron-vite build && electron-builder --mac zip --publish never",
+    "dist": "electron-vite build && electron-builder --mac --publish never",
+    "dist:release": "electron-vite build && electron-builder --mac --publish always",
+    "start": "electron-vite preview",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "build": {
+    "appId": "com.tidal.menubar",
+    "productName": "Tidal",
+    "copyright": "Copyright © 2026 Tidal",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "extendInfo": {
+        "LSUIElement": true
+      }
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "chasel34",
+      "repo": "tidal",
+      "tagNamePrefix": "menubar-v",
+      "releaseType": "draft"
+    }
+  },
+  "dependencies": {
+    "@base-ui/react": "catalog:",
+    "@tidal/core": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "lucide-react": "^1.16.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "stock-sdk": "catalog:",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "electron": "^42.3.0",
+    "electron-builder": "26.11.1",
+    "electron-vite": "^6.0.0-beta.1",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.60.0",
+    "vite": "^8.0.0",
+    "vitest": "catalog:"
+  }
+}

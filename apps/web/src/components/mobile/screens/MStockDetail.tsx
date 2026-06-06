@@ -22,7 +22,7 @@ interface MStockDetailProps {
 
 const TAKE_MAP: Record<DetailPeriod, number> = { "1M": 22, "3M": 66, "1Y": 250 };
 
-export function MStockDetail({ code, onBack: _onBack, openSheet }: MStockDetailProps) {
+export function MStockDetail({ code, openSheet }: MStockDetailProps) {
   const P = usePalette();
   const theme = useStore((state) => state.theme);
   const quotes = useStore((state) => state.quotes);
