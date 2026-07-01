@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import {
   Bell,
+  Cloud,
   Download,
   Info,
   PanelTop,
@@ -14,7 +15,7 @@ import {
   Waves,
   X,
 } from "lucide-react";
-import { aiResolve, OCR_PROVIDER_MAP } from "@tidal/core";
+import { aiResolve, OCR_PROVIDER_MAP, SYNC_SURFACE_LABEL } from "@tidal/core";
 import { cFmtCompact, cFmtMoney, cFmtNum, cFmtPct } from "@shared/format";
 import { moveColor } from "@shared/theme";
 import { typeLabel, unitLabel } from "@shared/portfolio";
@@ -26,6 +27,7 @@ import type {
   SearchResultDTO,
   ThemeMode,
 } from "@shared/types";
+import type { MenubarSyncState, MenubarSyncStatus } from "@shared/sync";
 import { Card, CalmSwitch, GhostButton, GroupLabel, PrimaryButton, Row, Segmented, SelectBox } from "./Controls";
 import { OcrImportModal } from "./OcrImportModal";
 import type { OcrTarget } from "@/hooks/useOcrImport";
@@ -33,7 +35,7 @@ import { usePalette } from "@/hooks/usePalette";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useConfig, useMenubarStore, usePortfolioDerived, useResolvedTheme } from "@/store/useMenubarStore";
 
-type Pane = "general" | "appearance" | "menubar" | "ai" | "notify" | "portfolio" | "about";
+type Pane = "general" | "appearance" | "menubar" | "ai" | "notify" | "portfolio" | "sync" | "about";
 
 const PANES: { id: Pane; label: string; icon: ReactNode }[] = [
   { id: "general", label: "通用", icon: <SlidersHorizontal size={16} /> },
@@ -42,6 +44,7 @@ const PANES: { id: Pane; label: string; icon: ReactNode }[] = [
   { id: "ai", label: "智能识别", icon: <Sparkles size={16} /> },
   { id: "notify", label: "通知提醒", icon: <Bell size={16} /> },
   { id: "portfolio", label: "持仓与自选", icon: <Wallet size={16} /> },
+  { id: "sync", label: "云同步", icon: <Cloud size={16} /> },
   { id: "about", label: "关于", icon: <Info size={16} /> },
 ];
 
@@ -507,6 +510,186 @@ function AiPane({ onImport }: { onImport: (target: OcrTarget) => void }) {
   );
 }
 
+function syncStatusInfo(P: ReturnType<typeof usePalette>, s: MenubarSyncState): {
+  color: string;
+  text: string;
+} {
+  const green = P.isDark ? "#37c98c" : "#0f9d63";
+  const amber = P.isDark ? "#e0ad62" : "#a9781f";
+  const red = P.isDark ? "#ff6b6b" : "#cf3a33";
+  const status: MenubarSyncStatus = s.status;
+  switch (status) {
+    case "synced":
+      return { color: green, text: "已同步" };
+    case "pending":
+      return { color: amber, text: "有本机更改，等待同步" };
+    case "syncing":
+      return { color: P.accent, text: "正在同步…" };
+    case "reauth":
+      return { color: red, text: "授权已过期，需要重新登录" };
+    case "conflict":
+      return { color: red, text: "发现同步冲突" };
+    case "failed":
+      return { color: red, text: s.failKind === "badCloud" ? "云端数据无法识别" : "同步失败，可稍后重试" };
+    default:
+      return { color: green, text: "已连接" };
+  }
+}
+
+function SyncPane() {
+  const P = usePalette();
+  const config = useConfig();
+  const [s, setS] = useState<MenubarSyncState | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void window.tidal.getSyncState().then((st) => {
+      if (active) setS(st);
+    });
+    const unsub = window.tidal.onSyncChanged((st) => setS(st));
+    return () => {
+      active = false;
+      unsub();
+    };
+  }, []);
+
+  const run = async (action: Parameters<typeof window.tidal.runSyncAction>[0]) => {
+    setBusy(true);
+    try {
+      setS(await window.tidal.runSyncAction(action));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!s) return null;
+
+  if (!s.configured) {
+    return (
+      <Card P={P}>
+        <div style={{ padding: 16, fontSize: 13, color: P.muted, lineHeight: 1.6 }}>
+          未配置 Google 客户端（client id / secret）。需要在启动前提供菜单栏的 Desktop OAuth 凭据。
+        </div>
+      </Card>
+    );
+  }
+
+  const info = syncStatusInfo(P, s);
+  const locking = busy || s.status === "syncing";
+
+  if (!s.connected) {
+    return (
+      <Card P={P}>
+        <div style={{ padding: 16 }}>
+          <div style={{ fontSize: 14, color: P.text, fontWeight: 500 }}>未连接 Google Drive</div>
+          <div style={{ fontSize: 12.5, color: P.muted, lineHeight: 1.6, marginTop: 8 }}>
+            连接后，可在菜单栏客户端、网页端与移动网页之间同步持仓、自选与现金。只访问 Tidal
+            自己的应用数据区，不读取你的 Drive 文件列表；AI API Key 不会同步。
+          </div>
+          {s.errorMsg && (
+            <div style={{ fontSize: 12, color: info.color, marginTop: 10, lineHeight: 1.5 }}>{s.errorMsg}</div>
+          )}
+          <div style={{ marginTop: 14 }}>
+            <PrimaryButton P={P} onClick={() => void run("connect")} disabled={locking}>
+              {locking ? "连接中…" : "连接 Google Drive"}
+            </PrimaryButton>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  const localCounts = `持仓 ${config.holdings.length} · 自选 ${config.watch.length} · 现金 ${cFmtMoney(config.cash, { dec: 0 })}`;
+
+  return (
+    <>
+      <Card P={P} style={{ marginBottom: 14 }}>
+        <Row label={s.account?.name ?? "Google 账户"} sub={s.account?.email ?? undefined} P={P} last>
+          <span style={{ fontSize: 12, color: info.color, fontWeight: 500 }}>{info.text}</span>
+        </Row>
+      </Card>
+
+      {s.status === "conflict" && (
+        <Card P={P} style={{ marginBottom: 14 }}>
+          <div style={{ padding: 16 }}>
+            <div style={{ fontSize: 13, color: P.muted, lineHeight: 1.6, marginBottom: 12 }}>
+              本机与云端都发生了更改，请选择保留哪一份（整体覆盖，不做逐项合并）。
+            </div>
+            <div style={{ fontSize: 12, color: P.subtle, marginBottom: 4 }}>本机：{localCounts}</div>
+            {s.cloudPreview && (
+              <div style={{ fontSize: 12, color: P.subtle, marginBottom: 14 }}>
+                云端：持仓 {s.cloudPreview.holdings} · 自选 {s.cloudPreview.watch} · 现金{" "}
+                {cFmtMoney(s.cloudPreview.cash, { dec: 0 })}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              <PrimaryButton P={P} onClick={() => void run("uploadOverwrite")} disabled={busy}>
+                保留本机，覆盖云端
+              </PrimaryButton>
+              <GhostButton P={P} onClick={() => void run("restoreOverwrite")} disabled={busy}>
+                使用云端，覆盖本机
+              </GhostButton>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {s.status === "reauth" && (
+        <Card P={P} style={{ marginBottom: 14 }}>
+          <div style={{ padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: 1, fontSize: 12.5, color: P.muted }}>Google 授权已过期。</div>
+            <PrimaryButton P={P} onClick={() => void run("connect")} disabled={busy}>
+              重新登录
+            </PrimaryButton>
+          </div>
+        </Card>
+      )}
+
+      <GroupLabel P={P}>状态</GroupLabel>
+      <Card P={P} style={{ marginBottom: 14 }}>
+        <Row label="最近同步来源" P={P}>
+          <span style={{ fontSize: 12.5, color: P.text }}>
+            {s.source ? SYNC_SURFACE_LABEL[s.source] : "—"}
+          </span>
+        </Row>
+        <Row label="本机未同步更改" P={P} last>
+          <span style={{ fontSize: 12.5, color: s.hasLocalChanges ? info.color : P.text }}>
+            {s.hasLocalChanges ? "有" : "无"}
+          </span>
+        </Row>
+      </Card>
+
+      <GroupLabel P={P}>操作</GroupLabel>
+      <Card P={P}>
+        <Row label="立即同步" P={P}>
+          <GhostButton P={P} onClick={() => void run("syncNow")} disabled={locking}>
+            同步
+          </GhostButton>
+        </Row>
+        <Row label="从云端恢复" sub="用云端整体覆盖本机" P={P}>
+          <GhostButton P={P} onClick={() => void run("restoreOverwrite")} disabled={locking}>
+            恢复
+          </GhostButton>
+        </Row>
+        <Row label="上传本机覆盖云端" P={P}>
+          <GhostButton P={P} onClick={() => void run("uploadOverwrite")} disabled={locking}>
+            上传
+          </GhostButton>
+        </Row>
+        <Row label="断开连接" sub="本机数据保留，云端数据不删除" P={P} last>
+          <GhostButton P={P} onClick={() => void run("disconnect")} disabled={busy}>
+            断开
+          </GhostButton>
+        </Row>
+      </Card>
+      <div style={{ margin: "10px 4px 0", fontSize: 11.5, color: P.subtle, lineHeight: 1.5 }}>
+        菜单栏客户端会在启动时同步，并在你修改持仓后自动上传。
+      </div>
+    </>
+  );
+}
+
 export function SettingsApp() {
   const P = usePalette();
   const config = useConfig();
@@ -665,6 +848,7 @@ export function SettingsApp() {
           {pane === "ai" && <AiPane onImport={(t) => setOcr(t)} />}
           {pane === "notify" && <NotifyPane />}
           {pane === "portfolio" && <PortfolioPane onImport={() => setOcr("holding")} />}
+          {pane === "sync" && <SyncPane />}
 
           {pane === "about" && (
             <Card P={P}>

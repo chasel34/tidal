@@ -60,3 +60,18 @@ _避免_: 换算, 折算
 
 The user's own multimodal-model credential set (provider, API key, base URL, model id) that powers 截图导入. BYOK and single-active-provider. 仅本地存储 on each surface and deliberately excluded from the export/import backup so the key never travels in a shareable file.
 _避免_: OCR 设置, 模型配置
+
+### 组合同步
+
+The capability that keeps the 组合核心 in step across a user's devices through their own Google Drive 应用数据区. The user surface labels it "Google Drive 同步", but the synced unit is deliberately narrower than the word "配置" suggests: it covers only the 组合核心, not per-device preferences. AI 识别配置 is never part of 组合同步.
+_避免_: 配置同步 (oversells the scope), 备份
+
+### 组合核心
+
+The portfolio facts worth carrying between devices: 持仓, 自选, and 现金 — and nothing else. Per-device preferences (主题, 周期, 排序偏好, 菜单栏偏好, 价格提醒) are deliberately out of scope; they are cheap to re-set on each device and stay local. The 组合核心 is the single unit 组合同步 reads and writes as a whole.
+_避免_: 全量配置, 用户配置
+
+### 同步冲突
+
+The state where a device's local 组合核心 and the cloud copy have both changed since that device last synced, so neither can be assumed newer. 组合同步 detects this rather than silently overwriting, and resolves it as a whole-snapshot choice (keep this device's 组合核心 or take the cloud's) — never a field-by-field or item-by-item merge.
+_避免_: 合并, merge

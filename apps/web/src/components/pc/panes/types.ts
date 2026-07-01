@@ -6,6 +6,7 @@ export type ModalState =
   | { type: "holding"; code?: string }
   | { type: "ocr"; target?: OcrTarget }
   | { type: "aiSettings" }
+  | { type: "sync" }
   | null;
 
 export interface PaneProps {

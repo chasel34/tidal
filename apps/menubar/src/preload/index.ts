@@ -35,6 +35,15 @@ const api: TidalApi = {
   getFundProfile: (code) => ipcRenderer.invoke("market:fundProfile", code),
   getPortfolioSeries: (payload) => ipcRenderer.invoke("market:portfolioSeries", payload),
   getIndices: () => ipcRenderer.invoke("market:indices"),
+  getSyncState: () => ipcRenderer.invoke("sync:getState"),
+  runSyncAction: (action) => ipcRenderer.invoke("sync:action", action),
+  onSyncChanged: (callback) => {
+    const listener = (_event: IpcRendererEvent, state: Parameters<typeof callback>[0]) => {
+      callback(state);
+    };
+    ipcRenderer.on("sync:changed", listener);
+    return () => ipcRenderer.removeListener("sync:changed", listener);
+  },
 };
 
 contextBridge.exposeInMainWorld("tidal", api);

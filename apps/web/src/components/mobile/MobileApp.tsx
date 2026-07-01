@@ -16,6 +16,8 @@ import { MAddWatchSheet } from "@/components/mobile/sheets/MAddWatchSheet";
 import { MHoldingSheet } from "@/components/mobile/sheets/MHoldingSheet";
 import { MOcrImportSheet } from "@/components/mobile/sheets/MOcrImportSheet";
 import { MAiSettingsSheet } from "@/components/mobile/sheets/MAiSettingsSheet";
+import { SyncSettingsSheet } from "@/components/shared/sync/SyncSettingsModal";
+import { useSyncBootstrap } from "@/hooks/useSyncBootstrap";
 import type { OcrTarget } from "@/hooks/useOcrImport";
 
 type SheetState =
@@ -23,11 +25,13 @@ type SheetState =
   | { type: "holding"; code?: string }
   | { type: "ocr"; target?: OcrTarget }
   | { type: "aiSettings" }
+  | { type: "sync" }
   | null;
 
 export function MobileApp() {
   const P = usePalette();
   useQuotes(); // start quote polling
+  useSyncBootstrap();
 
   const [detail, setDetail] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
@@ -94,6 +98,12 @@ export function MobileApp() {
     topRight = (
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <button
+          onClick={() => setSheet({ type: "sync" })}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: P.muted }}
+        >
+          ☁
+        </button>
+        <button
           onClick={() => setSheet({ type: "aiSettings" })}
           style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: P.muted }}
         >
@@ -141,6 +151,7 @@ export function MobileApp() {
         />
       )}
       {sheet?.type === "aiSettings" && <MAiSettingsSheet P={P} onClose={closeSheet} />}
+      {sheet?.type === "sync" && <SyncSettingsSheet P={P} onClose={closeSheet} />}
     </MShell>
   );
 }

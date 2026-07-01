@@ -20,6 +20,8 @@ import {
   loadConfig,
   saveConfig,
 } from "./config-store";
+import type { MenubarSyncAction, MenubarSyncState } from "@shared/sync";
+import * as syncService from "./sync-service";
 import type { ResolvedOcrConfig } from "@tidal/core";
 import {
   getFundNav,
@@ -289,11 +291,19 @@ function broadcastConfigChanged(config: MenubarConfig) {
   });
 }
 
+function broadcastSyncChanged(state: MenubarSyncState) {
+  [popoverWindow, settingsWindow].forEach((window) => {
+    if (!window || window.isDestroyed()) return;
+    window.webContents.send("sync:changed", state);
+  });
+}
+
 function setupIpc() {
   ipcMain.handle("config:load", () => loadConfig());
   ipcMain.handle("config:save", async (_event, config: MenubarConfig) => {
     const saved = await saveConfig(config);
     broadcastConfigChanged(saved);
+    syncService.onLocalConfigSaved(saved);
     return { config: saved };
   });
   ipcMain.handle("config:import", async (_event, current: MenubarConfig) => {
@@ -367,11 +377,38 @@ function setupIpc() {
       pct: latestQuotes[idx.code]?.changePercent ?? 0,
     })),
   );
+  ipcMain.handle("sync:getState", () => syncService.getState());
+  ipcMain.handle("sync:action", async (_event, action: MenubarSyncAction) => {
+    switch (action) {
+      case "connect":
+        await syncService.connect();
+        break;
+      case "disconnect":
+        await syncService.disconnect();
+        break;
+      case "syncNow":
+        await syncService.syncNow();
+        break;
+      case "uploadOverwrite":
+        await syncService.uploadOverwrite();
+        break;
+      case "restoreOverwrite":
+        await syncService.restoreOverwrite();
+        break;
+      case "deleteCloud":
+        await syncService.deleteCloud();
+        break;
+    }
+    return syncService.getState();
+  });
 }
 
 app.setName("Tidal");
 if (process.env.TIDAL_E2E_USER_DATA) {
   app.setPath("userData", process.env.TIDAL_E2E_USER_DATA);
+}
+if (process.env.TIDAL_E2E_CDP) {
+  app.commandLine.appendSwitch("remote-debugging-port", process.env.TIDAL_E2E_CDP);
 }
 setupIpc();
 
@@ -396,10 +433,19 @@ void app.whenReady().then(async () => {
   const popover = createPopoverWindow();
   const config = await loadConfig();
   if (config.launchAtLogin) setLoginItem(true);
+
+  // 组合同步: wire notifier, restore state, and reconcile with the cloud once.
+  syncService.setNotifier(broadcastSyncChanged);
+  syncService.setConfigNotifier(broadcastConfigChanged);
+  await syncService.init();
+  void syncService.bootstrap();
   if (process.env.TIDAL_E2E_SHOW === "popover") {
     positionPopover(popover);
     popover.show();
     popover.focus();
+  }
+  if (process.env.TIDAL_E2E_SHOW === "settings") {
+    openSettings();
   }
 });
 
