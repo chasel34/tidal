@@ -12,6 +12,7 @@ import type {
   SearchResultDTO,
 } from "./types";
 import type { SeriesPoint } from "./series";
+import type { MenubarSyncAction, MenubarSyncState } from "./sync";
 
 export interface SaveConfigResult {
   config: MenubarConfig;
@@ -83,6 +84,9 @@ export interface TidalApi {
     quotes: Record<string, Quote>;
   }) => Promise<SeriesPoint>;
   getIndices: () => Promise<IndexQuote[]>;
+  getSyncState: () => Promise<MenubarSyncState>;
+  runSyncAction: (action: MenubarSyncAction) => Promise<MenubarSyncState>;
+  onSyncChanged: (callback: (state: MenubarSyncState) => void) => () => void;
 }
 
 declare global {

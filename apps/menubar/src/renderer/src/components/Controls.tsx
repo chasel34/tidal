@@ -286,22 +286,26 @@ export function GhostButton({
   onClick,
   P,
   danger,
+  disabled,
 }: {
   children: ReactNode;
   onClick?: () => void;
   P: Palette;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
         padding: "7px 12px",
         borderRadius: 8,
         border: `1px solid ${P.line}`,
         background: "transparent",
         color: danger ? (P.isDark ? "#ff5d5d" : "#d6342f") : P.text,
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.45 : 1,
         fontSize: 12.5,
       }}
     >

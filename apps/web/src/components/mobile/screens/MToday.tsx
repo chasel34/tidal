@@ -71,7 +71,7 @@ export function MToday({ goDetail }: MTodayProps) {
           <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: P.subtle, fontSize: 13 }}>暂无走势数据</div>
         )}
         <div style={{ marginTop: 10 }}>
-          <MSegmented P={P} options={["1D", "1W", "1M", "3M", "1Y"]} value={period} onChange={(v) => setPeriod(v as Period)} size="sm" />
+          <MSegmented P={P} options={["1W", "1M", "3M", "1Y"]} value={period} onChange={(v) => setPeriod(v as Period)} size="sm" />
         </div>
       </MCard>
 

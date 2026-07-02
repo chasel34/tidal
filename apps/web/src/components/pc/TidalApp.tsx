@@ -11,7 +11,8 @@ import { WatchPane } from "@/components/pc/panes/WatchPane";
 import { AddWatchModal } from "@/components/pc/modals/AddWatchModal";
 import { HoldingModal } from "@/components/pc/modals/HoldingModal";
 import { OcrImportModal } from "@/components/pc/modals/OcrImportModal";
-import { AiSettingsModal } from "@/components/pc/modals/AiSettingsModal";
+import { SettingsModal } from "@/components/pc/modals/SettingsModal";
+import { useSyncBootstrap } from "@/hooks/useSyncBootstrap";
 import type { ModalState } from "@/components/pc/panes/types";
 
 export function TidalApp() {
@@ -20,6 +21,7 @@ export function TidalApp() {
   const P = usePalette();
   const indices = useQuotes();
   const [modal, setModal] = useState<ModalState>(null);
+  useSyncBootstrap();
 
   // avoid hydration flash: render plain background until local state is loaded
   if (!hydrated) {
@@ -40,7 +42,11 @@ export function TidalApp() {
         overflow: "hidden",
       }}
     >
-      <Sidebar P={P} indices={indices} onOpenAiSettings={() => setModal({ type: "aiSettings" })} />
+      <Sidebar
+        P={P}
+        indices={indices}
+        onOpenSettings={() => setModal({ type: "settings" })}
+      />
 
       <main style={{ overflowY: "auto", overflowX: "hidden" }}>
         <div style={{ padding: "30px 40px 48px", maxWidth: 1080, margin: "0 auto" }}>
@@ -60,12 +66,12 @@ export function TidalApp() {
         <OcrImportModal
           P={P}
           defaultTarget={modal.target}
-          onOpenSettings={() => setModal({ type: "aiSettings" })}
+          onOpenSettings={() => setModal({ type: "settings", tab: "ai" })}
           onClose={() => setModal(null)}
         />
       )}
-      {modal?.type === "aiSettings" && (
-        <AiSettingsModal P={P} onClose={() => setModal(null)} />
+      {modal?.type === "settings" && (
+        <SettingsModal P={P} initialTab={modal.tab} onClose={() => setModal(null)} />
       )}
     </div>
   );

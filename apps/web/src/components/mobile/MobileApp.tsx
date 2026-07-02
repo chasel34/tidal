@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { Settings } from "lucide-react";
 import { typeLabel, usePortfolioDerived, useStore } from "@/store/useStore";
 import { usePalette } from "@/hooks/usePalette";
 import { useQuotes } from "@/hooks/useQuotes";
@@ -15,19 +16,21 @@ import { MFundDetail } from "@/components/mobile/screens/MFundDetail";
 import { MAddWatchSheet } from "@/components/mobile/sheets/MAddWatchSheet";
 import { MHoldingSheet } from "@/components/mobile/sheets/MHoldingSheet";
 import { MOcrImportSheet } from "@/components/mobile/sheets/MOcrImportSheet";
-import { MAiSettingsSheet } from "@/components/mobile/sheets/MAiSettingsSheet";
+import { MSettingsSheet } from "@/components/mobile/sheets/MSettingsSheet";
+import { useSyncBootstrap } from "@/hooks/useSyncBootstrap";
 import type { OcrTarget } from "@/hooks/useOcrImport";
 
 type SheetState =
   | { type: "watch" }
   | { type: "holding"; code?: string }
   | { type: "ocr"; target?: OcrTarget }
-  | { type: "aiSettings" }
+  | { type: "settings"; view?: "ai" | "sync" }
   | null;
 
 export function MobileApp() {
   const P = usePalette();
   useQuotes(); // start quote polling
+  useSyncBootstrap();
 
   const [detail, setDetail] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
@@ -92,18 +95,43 @@ export function MobileApp() {
       topSub = `${sortedWatch.length} 只关注`;
     }
     topRight = (
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
-          onClick={() => setSheet({ type: "aiSettings" })}
-          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: P.muted }}
+          onClick={() => setSheet({ type: "settings" })}
+          aria-label="设置"
+          style={{
+            background: "transparent",
+            border: `1px solid ${P.line}`,
+            color: P.muted,
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          ⚙
+          <Settings size={18} />
         </button>
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 26, color: P.muted }}
+          aria-label="切换主题"
+          style={{
+            background: "transparent",
+            border: `1px solid ${P.line}`,
+            color: P.muted,
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            cursor: "pointer",
+            fontSize: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          {theme === "dark" ? "☀" : "☾"}
+          {theme === "dark" ? "☾" : "☀"}
         </button>
       </div>
     );
@@ -136,11 +164,13 @@ export function MobileApp() {
         <MOcrImportSheet
           P={P}
           defaultTarget={sheet.target}
-          onOpenSettings={() => setSheet({ type: "aiSettings" })}
+          onOpenSettings={() => setSheet({ type: "settings", view: "ai" })}
           onClose={closeSheet}
         />
       )}
-      {sheet?.type === "aiSettings" && <MAiSettingsSheet P={P} onClose={closeSheet} />}
+      {sheet?.type === "settings" && (
+        <MSettingsSheet P={P} initialView={sheet.view} onClose={closeSheet} />
+      )}
     </MShell>
   );
 }

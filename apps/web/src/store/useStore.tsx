@@ -67,6 +67,7 @@ interface TidalStore extends PersistShape {
   removeHolding: (code: string) => void;
   importHoldings: (items: HoldingItem[]) => void;
   importWatch: (items: WatchItem[]) => void;
+  replacePortfolio: (core: { holdings: HoldingItem[]; watch: WatchItem[]; cash: number }) => void;
   resetAll: () => void;
 }
 
@@ -203,6 +204,8 @@ export const useTidalStore = create<TidalStore>()(
           const toAdd = items.filter((item) => !existing.has(item.code));
           return { watch: [...state.watch, ...toAdd] };
         }),
+      replacePortfolio: (core) =>
+        set({ holdings: core.holdings, watch: core.watch, cash: core.cash }),
       resetAll: () => set({ holdings: [], watch: [], cash: 0 }),
     }),
     {
@@ -212,6 +215,8 @@ export const useTidalStore = create<TidalStore>()(
       skipHydration: true,
       onRehydrateStorage: () => (state, error) => {
         if (error) console.error("Failed to hydrate tidal store.", error);
+        // 1D 已从走势周期中移除；迁移旧的持久化值，避免无选中态。
+        if (state?.period === "1D") state.setPeriod("1M");
         state?.setHydrated(true);
       },
     }

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tidal · 菜单栏看板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  #root { height: 100vh; }
+  body { font-family: 'Inter', 'PingFang SC', system-ui, sans-serif;
+    background: #000; -webkit-font-smoothing: antialiased; }
+  ::selection { background: rgba(91,79,212,0.18); }
+  @keyframes syncspin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .sync-modal-in { animation: syncmodal .2s cubic-bezier(.2,.7,.3,1); }
+    @keyframes syncmodal { from { transform: translateY(-8px); } to { transform: translateY(0); } }
+    .sync-sheet-in { animation: syncsheet .26s cubic-bezier(.22,.61,.36,1); }
+    @keyframes syncsheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  }
+  .sync-row { transition: background .1s ease; }
+  .sync-row:not(:disabled):hover { background: rgba(140,140,150,0.10) !important; }
+  @keyframes mbspin { to { transform: rotate(360deg); } }
+  @keyframes mbbob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+  .mb-hoverable { transition: background .1s ease; }
+  .mb-hoverable:hover { background: var(--mb-hover) !important; }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-thumb { background: rgba(140,140,150,0.32); border-radius: 8px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="calm/data.js"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.js"></script>
+<script type="text/babel" src="calm/util.jsx"></script>
+<script type="text/babel" src="calm/charts.jsx"></script>
+<script type="text/babel" src="calm/ocr.jsx"></script>
+<script type="text/babel" src="calm/ai-settings.jsx"></script>
+<script type="text/babel" src="menubar/mb-icon.jsx"></script>
+<script type="text/babel" src="menubar/mb-store.jsx"></script>
+<script type="text/babel" src="menubar/mb-controls.jsx"></script>
+<script type="text/babel" src="menubar/mb-picker.jsx"></script>
+<script type="text/babel" src="menubar/mb-ocr.jsx"></script>
+<script type="text/babel" src="menubar/mb-popover.jsx"></script>
+<script type="text/babel" src="menubar/mb-settings.jsx"></script>
+<script src="sync/sync-data.js"></script>
+<script type="text/babel" src="sync/sync-bits.jsx"></script>
+<script type="text/babel" src="sync/sync-screens.jsx"></script>
+<script type="text/babel" src="sync/sync-dialogs.jsx"></script>
+<script type="text/babel" src="sync/sync-machine.jsx"></script>
+<script type="text/babel" src="sync/sync-panel.jsx"></script>
+<script type="text/babel" src="calm-mobile/tweaks-panel.jsx"></script>
+<script type="text/babel" src="sync/sync-demo.jsx"></script>
+<script type="text/babel" src="menubar/mb-desktop.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="env,react">
+  ReactDOM.createRoot(document.getElementById("root")).render(<MBScene />);
+</script>
+</body>
+</html>

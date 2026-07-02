@@ -14,7 +14,7 @@ type SheetState =
   | { type: "watch" }
   | { type: "holding"; code?: string }
   | { type: "ocr"; target?: "holding" | "watch" }
-  | { type: "aiSettings" }
+  | { type: "settings"; view?: "ai" | "sync" }
   | null;
 
 interface MWatchProps {

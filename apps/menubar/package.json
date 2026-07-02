@@ -1,6 +1,6 @@
 {
   "name": "@tidal/menubar",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "main": "out/main/index.js",
@@ -59,7 +59,7 @@
     "@base-ui/react": "catalog:",
     "@tidal/core": "workspace:*",
     "@tanstack/react-query": "catalog:",
-    "lucide-react": "^1.16.0",
+    "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "stock-sdk": "catalog:",

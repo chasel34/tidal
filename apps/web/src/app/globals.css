@@ -24,3 +24,9 @@ body {
 ::selection {
   background: rgba(91, 79, 212, 0.18);
 }
+
+@keyframes tidalspin {
+  to {
+    transform: rotate(360deg);
+  }
+}

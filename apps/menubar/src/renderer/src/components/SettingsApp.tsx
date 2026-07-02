@@ -4,6 +4,7 @@ import {
   Download,
   Info,
   PanelTop,
+  RefreshCcw,
   ScanLine,
   Search,
   SlidersHorizontal,
@@ -28,12 +29,13 @@ import type {
 } from "@shared/types";
 import { Card, CalmSwitch, GhostButton, GroupLabel, PrimaryButton, Row, Segmented, SelectBox } from "./Controls";
 import { OcrImportModal } from "./OcrImportModal";
+import { SyncPane } from "./SyncPane";
 import type { OcrTarget } from "@/hooks/useOcrImport";
 import { usePalette } from "@/hooks/usePalette";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useConfig, useMenubarStore, usePortfolioDerived, useResolvedTheme } from "@/store/useMenubarStore";
 
-type Pane = "general" | "appearance" | "menubar" | "ai" | "notify" | "portfolio" | "about";
+type Pane = "general" | "appearance" | "menubar" | "ai" | "notify" | "portfolio" | "sync" | "about";
 
 const PANES: { id: Pane; label: string; icon: ReactNode }[] = [
   { id: "general", label: "通用", icon: <SlidersHorizontal size={16} /> },
@@ -42,6 +44,7 @@ const PANES: { id: Pane; label: string; icon: ReactNode }[] = [
   { id: "ai", label: "智能识别", icon: <Sparkles size={16} /> },
   { id: "notify", label: "通知提醒", icon: <Bell size={16} /> },
   { id: "portfolio", label: "持仓与自选", icon: <Wallet size={16} /> },
+  { id: "sync", label: "备份与同步", icon: <RefreshCcw size={16} /> },
   { id: "about", label: "关于", icon: <Info size={16} /> },
 ];
 
@@ -643,28 +646,35 @@ export function SettingsApp() {
                   <span style={{ fontSize: 12.5, color: P.subtle }}>实时</span>
                 </Row>
               </Card>
-              <GroupLabel P={P}>备份</GroupLabel>
-              <Card P={P}>
-                <Row label="导出数据" sub="菜单栏配置、持仓、自选、提醒与偏好" P={P}>
-                  <GhostButton P={P} onClick={exportConfig}>
-                    <Download size={13} style={{ verticalAlign: -2, marginRight: 5 }} />
-                    导出
-                  </GhostButton>
-                </Row>
-                <Row label="导入数据" sub="支持菜单栏 JSON 和当前 web store JSON" P={P} last>
-                  <GhostButton P={P} onClick={importConfig}>
-                    <Upload size={13} style={{ verticalAlign: -2, marginRight: 5 }} />
-                    选择文件
-                  </GhostButton>
-                </Row>
-              </Card>
-              {msg && <div style={{ margin: "10px 4px 0", fontSize: 11.5, color: P.subtle }}>{msg}</div>}
             </>
           )}
 
           {pane === "ai" && <AiPane onImport={(t) => setOcr(t)} />}
           {pane === "notify" && <NotifyPane />}
           {pane === "portfolio" && <PortfolioPane onImport={() => setOcr("holding")} />}
+          {pane === "sync" && (
+            <>
+              <SyncPane />
+              <div style={{ marginTop: 22 }}>
+                <GroupLabel P={P}>本地备份</GroupLabel>
+                <Card P={P}>
+                  <Row label="导出数据" sub="菜单栏配置、持仓、自选、提醒与偏好" P={P}>
+                    <GhostButton P={P} onClick={exportConfig}>
+                      <Download size={13} style={{ verticalAlign: -2, marginRight: 5 }} />
+                      导出
+                    </GhostButton>
+                  </Row>
+                  <Row label="导入数据" sub="支持菜单栏 JSON 和当前 web store JSON" P={P} last>
+                    <GhostButton P={P} onClick={importConfig}>
+                      <Upload size={13} style={{ verticalAlign: -2, marginRight: 5 }} />
+                      选择文件
+                    </GhostButton>
+                  </Row>
+                </Card>
+                {msg && <div style={{ margin: "10px 4px 0", fontSize: 11.5, color: P.subtle }}>{msg}</div>}
+              </div>
+            </>
+          )}
 
           {pane === "about" && (
             <Card P={P}>

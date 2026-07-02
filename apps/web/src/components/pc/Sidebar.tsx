@@ -3,6 +3,7 @@
 import type { Palette } from "@/lib/theme";
 import type { IndexQuote, TabId } from "@/lib/types";
 import { cFmtPct, cMove } from "@/lib/format";
+import { Settings } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 
@@ -31,11 +32,11 @@ function SideLabel({ children, P }: { children: React.ReactNode; P: Palette }) {
 export function Sidebar({
   P,
   indices,
-  onOpenAiSettings,
+  onOpenSettings,
 }: {
   P: Palette;
   indices: IndexQuote[];
-  onOpenAiSettings: () => void;
+  onOpenSettings: () => void;
 }) {
   const theme = useStore((state) => state.theme);
   const setTheme = useStore((state) => state.setTheme);
@@ -82,19 +83,23 @@ export function Sidebar({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <button
-            onClick={onOpenAiSettings}
-            title="智能识别设置"
+            onClick={onOpenSettings}
+            title="设置"
             style={{
               background: "transparent",
-              border: "none",
+              border: `1px solid ${P.line}`,
               color: P.muted,
-              fontSize: 16,
+              width: 32,
+              height: 32,
+              borderRadius: 16,
               cursor: "pointer",
-              padding: 4,
-              lineHeight: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
             }}
           >
-            ⚙
+            <Settings size={16} />
           </button>
           <ThemeToggle theme={theme} setTheme={setTheme} P={P} />
         </div>

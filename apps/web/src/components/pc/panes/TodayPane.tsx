@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/shared/ui/EmptyState";
 import type { Period, HoldingFull, WatchFull, Theme } from "@/lib/types";
 import type { PaneProps } from "./types";
 
-const RANGES: Period[] = ["1D", "1W", "1M", "3M", "1Y"];
+const RANGES: Period[] = ["1W", "1M", "3M", "1Y"];
 
 export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
   const theme = useStore((state) => state.theme);
@@ -179,7 +179,7 @@ export function TodayPane({ P, openModal }: { P: Palette } & PaneProps) {
           }}
         >
           <div style={{ fontSize: 13, color: P.muted }}>
-            资产走势 · {period === "1D" ? "当日分时" : "近 " + period}
+            资产走势 · 近 {period}
           </div>
           <div style={{ display: "flex", gap: 4 }}>
             {RANGES.map((r) => (
