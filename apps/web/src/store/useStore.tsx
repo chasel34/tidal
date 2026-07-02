@@ -215,6 +215,8 @@ export const useTidalStore = create<TidalStore>()(
       skipHydration: true,
       onRehydrateStorage: () => (state, error) => {
         if (error) console.error("Failed to hydrate tidal store.", error);
+        // 1D 已从走势周期中移除；迁移旧的持久化值，避免无选中态。
+        if (state?.period === "1D") state.setPeriod("1M");
         state?.setHydrated(true);
       },
     }

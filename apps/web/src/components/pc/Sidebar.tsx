@@ -3,8 +3,8 @@
 import type { Palette } from "@/lib/theme";
 import type { IndexQuote, TabId } from "@/lib/types";
 import { cFmtPct, cMove } from "@/lib/format";
+import { Settings } from "lucide-react";
 import { useStore } from "@/store/useStore";
-import { useSync } from "@/store/useSync";
 import { ThemeToggle } from "@/components/shared/ui/ThemeToggle";
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
@@ -32,34 +32,17 @@ function SideLabel({ children, P }: { children: React.ReactNode; P: Palette }) {
 export function Sidebar({
   P,
   indices,
-  onOpenAiSettings,
-  onOpenSync,
+  onOpenSettings,
 }: {
   P: Palette;
   indices: IndexQuote[];
-  onOpenAiSettings: () => void;
-  onOpenSync: () => void;
+  onOpenSettings: () => void;
 }) {
   const theme = useStore((state) => state.theme);
   const setTheme = useStore((state) => state.setTheme);
   const tab = useStore((state) => state.tab);
   const setTab = useStore((state) => state.setTab);
   const resetAll = useStore((state) => state.resetAll);
-  const syncConnected = useSync((s) => s.connected);
-  const syncStatus = useSync((s) => s.status);
-  const syncDotColor = !syncConnected
-    ? P.subtle
-    : syncStatus === "synced"
-      ? P.isDark
-        ? "#37c98c"
-        : "#0f9d63"
-      : syncStatus === "pending" || syncStatus === "syncing"
-        ? P.isDark
-          ? "#e0ad62"
-          : "#a9781f"
-        : P.isDark
-          ? "#ff6b6b"
-          : "#cf3a33";
   return (
     <aside
       style={{
@@ -100,47 +83,23 @@ export function Sidebar({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <button
-            onClick={onOpenSync}
-            title="Google Drive 同步"
-            style={{
-              position: "relative",
-              background: "transparent",
-              border: "none",
-              color: P.muted,
-              fontSize: 16,
-              cursor: "pointer",
-              padding: 4,
-              lineHeight: 1,
-            }}
-          >
-            ☁
-            <span
-              style={{
-                position: "absolute",
-                right: 2,
-                bottom: 2,
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: syncDotColor,
-                border: `1.5px solid ${P.bg}`,
-              }}
-            />
-          </button>
-          <button
-            onClick={onOpenAiSettings}
-            title="智能识别设置"
+            onClick={onOpenSettings}
+            title="设置"
             style={{
               background: "transparent",
-              border: "none",
+              border: `1px solid ${P.line}`,
               color: P.muted,
-              fontSize: 16,
+              width: 32,
+              height: 32,
+              borderRadius: 16,
               cursor: "pointer",
-              padding: 4,
-              lineHeight: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
             }}
           >
-            ⚙
+            <Settings size={16} />
           </button>
           <ThemeToggle theme={theme} setTheme={setTheme} P={P} />
         </div>

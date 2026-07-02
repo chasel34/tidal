@@ -5,7 +5,6 @@ import { aiResolve, OCR_PROVIDER_MAP } from "@tidal/core";
 import type { Palette } from "@/lib/theme";
 import { ocrTestConnection } from "@/lib/ocr-client";
 import { useAiByok } from "@/store/useAiByok";
-import { MSheet } from "@/components/mobile/ui/MSheet";
 
 function inputStyle(P: Palette): React.CSSProperties {
   return {
@@ -21,7 +20,8 @@ function inputStyle(P: Palette): React.CSSProperties {
   };
 }
 
-export function MAiSettingsSheet({ P, onClose }: { P: Palette; onClose: () => void }) {
+/** Inner form for 智能识别 — rendered as a sub-page of the merged 设置 sheet. */
+export function MAiSettingsBody({ P }: { P: Palette }) {
   const state = useAiByok();
   const setField = useAiByok((s) => s.setField);
   const pid = state.activeProvider;
@@ -50,7 +50,7 @@ export function MAiSettingsSheet({ P, onClose }: { P: Palette; onClose: () => vo
   };
 
   return (
-    <MSheet P={P} title="智能识别" sub="BYOK · AI 截图识别" onClose={onClose}>
+    <>
       <div style={{ fontSize: 13.5, color: P.muted, marginBottom: 18, lineHeight: 1.6 }}>
         截图导入由你自己的多模态模型驱动。API Key 只保存在本机。
       </div>
@@ -153,6 +153,6 @@ export function MAiSettingsSheet({ P, onClose }: { P: Palette; onClose: () => vo
       >
         ⚠ 隐私提示：使用 AI 识别时，你上传的持仓截图会发送至所选服务商（{provider.name}）进行识别。
       </div>
-    </MSheet>
+    </>
   );
 }

@@ -10,7 +10,6 @@ import {
 import type { Palette } from "@/lib/theme";
 import { ocrTestConnection } from "@/lib/ocr-client";
 import { useAiByok } from "@/store/useAiByok";
-import { Modal } from "@/components/shared/ui/Modal";
 import { tidalBtn, tidalInput } from "@/components/shared/ui/styles";
 
 function Field({
@@ -35,7 +34,8 @@ function Field({
   );
 }
 
-export function AiSettingsModal({ P, onClose }: { P: Palette; onClose: () => void }) {
+/** Inner form for 智能识别 (BYOK AI). Rendered inside the merged 设置 modal. */
+export function AiSettingsBody({ P }: { P: Palette }) {
   const state = useAiByok();
   const setActiveProvider = useAiByok((s) => s.setActiveProvider);
   const setField = useAiByok((s) => s.setField);
@@ -60,7 +60,7 @@ export function AiSettingsModal({ P, onClose }: { P: Palette; onClose: () => voi
   }
 
   return (
-    <Modal P={P} title="智能识别 · AI 设置" onClose={onClose} width={480}>
+    <>
       <div style={{ fontSize: 13, color: P.muted, marginBottom: 18, lineHeight: 1.6 }}>
         截图导入由你自己的多模态模型驱动（BYOK）。API Key 只保存在本机，绝不经过任何中转服务器。
       </div>
@@ -194,6 +194,6 @@ export function AiSettingsModal({ P, onClose }: { P: Palette; onClose: () => voi
       >
         ⚠ 隐私提示：使用 AI 识别时，你上传的持仓截图会发送至所选服务商（{provider.name}）进行识别。请确认你信任该服务商再使用。
       </div>
-    </Modal>
+    </>
   );
 }

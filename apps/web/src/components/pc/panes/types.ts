@@ -5,8 +5,7 @@ export type ModalState =
   | { type: "watch" }
   | { type: "holding"; code?: string }
   | { type: "ocr"; target?: OcrTarget }
-  | { type: "aiSettings" }
-  | { type: "sync" }
+  | { type: "settings"; tab?: "ai" | "sync" }
   | null;
 
 export interface PaneProps {

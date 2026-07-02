@@ -475,4 +475,9 @@ export const useSync = create<SyncState>()(
 
 if (typeof window !== "undefined") {
   void useSync.persist.rehydrate();
+  // Dev-only handle for driving sync states in E2E/CDP checks. Stripped from
+  // production builds; never rely on this outside local verification.
+  if (process.env.NODE_ENV !== "production") {
+    (window as unknown as { __sync?: typeof useSync }).__sync = useSync;
+  }
 }

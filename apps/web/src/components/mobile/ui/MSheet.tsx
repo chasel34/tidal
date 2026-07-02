@@ -8,10 +8,11 @@ interface MSheetProps {
   title: string;
   sub?: string;
   onClose: () => void;
+  onBack?: () => void;
   children: ReactNode;
 }
 
-export function MSheet({ P, title, sub, onClose, children }: MSheetProps) {
+export function MSheet({ P, title, sub, onClose, onBack, children }: MSheetProps) {
   const [closing, setClosing] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -71,10 +72,34 @@ export function MSheet({ P, title, sub, onClose, children }: MSheetProps) {
           <div style={{ width: 38, height: 5, borderRadius: 3, background: P.line }} />
         </div>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", padding: "4px 20px 12px", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 600, color: P.text }}>{title}</div>
-            {sub && <div style={{ fontSize: 12, color: P.subtle, marginTop: 2 }}>{sub}</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 20px 12px", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            {onBack && (
+              <button
+                onClick={onBack}
+                aria-label="返回"
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  background: P.chipBg,
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  color: P.muted,
+                  flexShrink: 0,
+                }}
+              >
+                ‹
+              </button>
+            )}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 17, fontWeight: 600, color: P.text }}>{title}</div>
+              {sub && <div style={{ fontSize: 12, color: P.subtle, marginTop: 2 }}>{sub}</div>}
+            </div>
           </div>
           <button
             onClick={handleClose}
