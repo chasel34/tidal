@@ -17,6 +17,15 @@
   button { -webkit-tap-highlight-color: transparent; }
   @keyframes msheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes mspin { to { transform: rotate(360deg); } }
+  @keyframes syncspin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .sync-modal-in { animation: syncmodal .2s cubic-bezier(.2,.7,.3,1); }
+    @keyframes syncmodal { from { transform: translateY(-8px); } to { transform: translateY(0); } }
+    .sync-sheet-in { animation: syncsheet .26s cubic-bezier(.22,.61,.36,1); }
+    @keyframes syncsheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  }
+  .sync-row { transition: background .1s ease; }
+  .sync-row:not(:disabled):hover { background: rgba(120,110,100,0.06) !important; }
   /* slim scrollbars */
   *::-webkit-scrollbar { width: 0; height: 0; }
 </style>
@@ -26,15 +35,26 @@
 
 <!-- reused Calm data + logic layer -->
 <script src="calm/data.js"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.js"></script>
 <script type="text/babel" src="calm/util.jsx"></script>
+<script type="text/babel" src="menubar/mb-icon.jsx"></script>
 <script type="text/babel" src="calm/charts.jsx"></script>
 <script type="text/babel" src="calm/ui.jsx"></script>
 <script type="text/babel" src="calm/store.jsx"></script>
 <script type="text/babel" src="calm/ocr.jsx"></script>
 <script type="text/babel" src="calm/ai-settings.jsx"></script>
 
+<!-- Google Drive 同步 (shared, surface-aware) -->
+<script src="sync/sync-data.js"></script>
+<script type="text/babel" src="sync/sync-bits.jsx"></script>
+<script type="text/babel" src="sync/sync-screens.jsx"></script>
+<script type="text/babel" src="sync/sync-dialogs.jsx"></script>
+<script type="text/babel" src="sync/sync-machine.jsx"></script>
+<script type="text/babel" src="sync/sync-panel.jsx"></script>
+
 <!-- mobile UI layer -->
 <script type="text/babel" src="calm-mobile/tweaks-panel.jsx"></script>
+<script type="text/babel" src="sync/sync-demo.jsx"></script>
 <script type="text/babel" src="calm-mobile/m-charts.jsx"></script>
 <script type="text/babel" src="calm-mobile/m-ui.jsx"></script>
 <script type="text/babel" src="calm-mobile/m-sheets.jsx"></script>

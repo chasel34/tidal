@@ -117,8 +117,13 @@ function CalmApp() {
           onOpenSettings={() => setModal({ type: "settings" })} />
       )}
       {modal && modal.type === "settings" && (
-        <SettingsModal P={P} onClose={() => setModal(null)} />
+        <SettingsModal P={P} onClose={() => setModal(null)}
+          initialTab={modal.tab} />
       )}
+
+      <TweaksPanel title="Tweaks">
+        <SyncDemoTweaks />
+      </TweaksPanel>
     </div>
   );
 }
@@ -228,9 +233,9 @@ function TodayPane({ store, P, openModal }) {
         <div style={{ display: "flex", justifyContent: "space-between",
           alignItems: "center", marginBottom: 10 }}>
           <div style={{ fontSize: 13, color: P.muted }}>
-            资产走势 · {period === "1D" ? "当日分时" : "近 " + period}</div>
+            资产走势 · 近 {period}</div>
           <div style={{ display: "flex", gap: 4 }}>
-            {["1D", "1W", "1M", "3M", "1Y"].map(r => (
+            {["1W", "1M", "3M", "1Y"].map(r => (
               <button key={r} onClick={() => setPeriod(r)} style={{
                 background: r === period ? P.chipBg : "transparent",
                 color: r === period ? P.text : P.muted, border: "none",

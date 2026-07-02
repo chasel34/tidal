@@ -120,7 +120,7 @@ function MTabBar({ T, tab, setTab }) {
 }
 
 // ---------- bottom sheet ----------
-function MSheet({ T, title, onClose, children, sub }) {
+function MSheet({ T, title, onClose, children, sub, onBack }) {
   const P = T.P;
   const [closing, setClosing] = useStateMU(false);
   const close = () => { setClosing(true); setTimeout(onClose, 220); };
@@ -146,9 +146,19 @@ function MSheet({ T, title, onClose, children, sub }) {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "6px 20px 12px", borderBottom: `1px solid ${P.lineSoft}` }}>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 600, color: P.text }}>{title}</div>
-            {sub && <div style={{ fontSize: 12, color: P.subtle, marginTop: 2 }}>{sub}</div>}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            {onBack && (
+              <button onClick={onBack} aria-label="返回" style={{ background: P.chipBg, border: "none",
+                color: P.muted, width: 30, height: 30, borderRadius: 15, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 0 }}>
+                <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke={P.muted}
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7.5 1 1.5 7.5 7.5 14" /></svg>
+              </button>
+            )}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 17, fontWeight: 600, color: P.text }}>{title}</div>
+              {sub && <div style={{ fontSize: 12, color: P.subtle, marginTop: 2 }}>{sub}</div>}
+            </div>
           </div>
           <button onClick={close} style={{ background: P.chipBg, border: "none", color: P.muted,
             width: 30, height: 30, borderRadius: 15, fontSize: 15, cursor: "pointer", lineHeight: 1 }}>✕</button>

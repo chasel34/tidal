@@ -8,6 +8,7 @@ const MB_SECTIONS = [
   { id: "ai",       label: "智能识别",  icon: "Sparkles" },
   { id: "notify",    label: "通知提醒",  icon: "Bell" },
   { id: "portfolio", label: "持仓与自选",icon: "Wallet" },
+  { id: "sync",      label: "备份与同步",icon: "RefreshCcw" },
   { id: "about",     label: "关于",      icon: "Info" },
 ];
 
@@ -68,7 +69,7 @@ function MBBackupCard({ store, P }) {
 
   return (
     <>
-      <MBGroupLabel P={P}>备份</MBGroupLabel>
+      <MBGroupLabel P={P}>本地备份</MBGroupLabel>
       <MBCard P={P}>
         <MBRow label="导出数据" sub="持仓、自选、提醒与偏好保存为 JSON 文件" P={P}>
           <button onClick={doExport} style={ioBtn}>
@@ -89,6 +90,20 @@ function MBBackupCard({ store, P }) {
           {msg.text}
         </div>
       )}
+    </>
+  );
+}
+
+// ---- 备份与同步 pane: Google Drive 云同步 + 本地文件备份 ----
+function MBSyncPane({ store, P, m }) {
+  return (
+    <>
+      <div style={{ position: "relative", minHeight: 340, marginBottom: 18,
+        border: `1px solid ${P.line}`, borderRadius: 12, overflow: "hidden",
+        background: P.isDark ? "rgba(255,255,255,0.02)" : "#ffffff" }}>
+        <SyncBody surface="menubar" P={P} m={m} flow />
+      </div>
+      <MBBackupCard store={store} P={P} />
     </>
   );
 }
@@ -217,6 +232,7 @@ function MBSettingsWindow({ store, P, onClose, onDragStart, initialPane }) {
   const move = (v) => mbMove(v, P.isDark ? "dark" : "light", store.conv);
   const D = window.CALM;
   const cur = MB_SECTIONS.find(s => s.id === pane);
+  const syncM = useSyncMachine("menubar");
 
   const refreshOpts = [
     { value: 15, label: "15 秒" }, { value: 30, label: "30 秒" },
@@ -305,6 +321,9 @@ function MBSettingsWindow({ store, P, onClose, onDragStart, initialPane }) {
 
           {/* ===== Smart recognition (BYOK AI) ===== */}
           {pane === "ai" && <MBAiPane P={P} />}
+
+          {/* ===== 备份与同步 (Google Drive + 本地文件) ===== */}
+          {pane === "sync" && <MBSyncPane store={store} P={P} m={syncM} />}
 
           {/* ===== Menu bar ===== */}
           {pane === "menubar" && (
@@ -461,7 +480,6 @@ function MBSettingsWindow({ store, P, onClose, onDragStart, initialPane }) {
                   <span style={{ fontSize: 12.5, color: P.subtle }}>演示</span>
                 </MBRow>
               </MBCard>
-              <MBBackupCard store={store} P={P} />
             </>
           )}
 
@@ -487,6 +505,9 @@ function MBSettingsWindow({ store, P, onClose, onDragStart, initialPane }) {
 
       {modal && <MBPickerModal store={store} P={P} modal={modal}
         onClose={() => setModal(null)} />}
+
+      {/* 同步确认 / 授权 — 以系统设置窗口为宿主的 macOS sheet，而非回到模块内 */}
+      {pane === "sync" && <SyncOverlays surface="menubar" P={P} m={syncM} z={90} />}
     </div>
   );
 }

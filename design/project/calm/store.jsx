@@ -16,7 +16,7 @@ function useStore() {
   const init = loadState() || {};
   const [theme, setTheme] = useStateS(init.theme || "light");
   const [tab, setTab] = useStateS(init.tab || "today");
-  const [period, setPeriod] = useStateS(init.period || "1M");
+  const [period, setPeriod] = useStateS(init.period === "1D" || !init.period ? "1M" : init.period);
   const [holdings, setHoldings] = useStateS(init.holdings || D.defaultHoldings);
   const [watch, setWatch] = useStateS(init.watch || D.defaultWatch);
   const [cash] = useStateS(init.cash != null ? init.cash : D.defaultCash);

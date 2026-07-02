@@ -204,6 +204,10 @@ function MBScene() {
           onClose={() => setOcrOpen(false)}
           onOpenSettings={() => { setOcrOpen(false); openSettings("ai"); }} />
       )}
+
+      <TweaksPanel title="Tweaks">
+        <SyncDemoTweaks />
+      </TweaksPanel>
     </div>
   );
 }

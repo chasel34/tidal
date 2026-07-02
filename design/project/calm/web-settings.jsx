@@ -47,8 +47,9 @@ function WSKeyField({ P, value, onChange, placeholder }) {
   );
 }
 
-function SettingsModal({ P, onClose }) {
+function SettingsModal({ P, onClose, initialTab }) {
   const ai = useAiSettings();
+  const [tab, setTab] = useStateWS(initialTab || "ai");
   const [adv, setAdv] = useStateWS(false);
   const [testing, setTesting] = useStateWS(false);
   const [result, setResult] = useStateWS(null);
@@ -65,9 +66,25 @@ function SettingsModal({ P, onClose }) {
 
   const okColor = P.isDark ? "#37c98c" : "#0f9d63";
   const errColor = P.isDark ? "#ff5d5d" : "#d6342f";
+  const m = useSyncMachine("web");
 
   return (
+    <>
     <Modal P={P} title="设置" onClose={onClose} width={500}>
+      <div style={{ marginBottom: 18 }}>
+        <WSeg P={P} value={tab} onChange={setTab}
+          options={[{ value: "ai", label: "智能识别" }, { value: "sync", label: "备份与同步" }]} />
+      </div>
+
+      {tab === "sync" && (
+        <div style={{ position: "relative", height: 520, overflow: "hidden",
+          margin: "0 -20px -20px", borderTop: `1px solid ${P.line}` }}>
+          <SyncBody surface="web" P={P} m={m} />
+        </div>
+      )}
+
+      {tab === "ai" && (
+      <div>
       <div style={{ fontSize: 12.5, color: P.muted, margin: "0 2px 18px", lineHeight: 1.55 }}>
         截图导入由你自己的大模型 API 识别。填入下方服务商的 API Key 后即可使用（未填则无法使用截图导入）。
       </div>
@@ -145,7 +162,12 @@ function SettingsModal({ P, onClose }) {
           </div>
         </div>
       </div>
+      </div>
+      )}
     </Modal>
+    {/* 同步确认 / 授权 — 以系统级弹窗罩在整个应用上方，而非局限在设置内容区 */}
+    {tab === "sync" && <SyncOverlays surface="web" P={P} m={m} z={200} />}
+    </>
   );
 }
 

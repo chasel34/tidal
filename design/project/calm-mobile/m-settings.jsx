@@ -1,4 +1,6 @@
-// Calm Mobile — Settings bottom sheet (BYOK AI recognition).
+// Calm Mobile — Settings sheet: a two-item list that pushes to sub-pages
+// (智能识别 / 备份与同步). Each sub-page renders in the same bottom sheet with a
+// back chevron in the header.
 const { useState: useStateMS } = React;
 
 function MSField({ T, label, hint, children }) {
@@ -34,7 +36,29 @@ function MSKeyField({ T, value, onChange, placeholder }) {
   );
 }
 
-function MSettingsSheet({ T, onClose }) {
+// ---- settings menu: rows that push to sub-pages ----
+function MSMenuRow({ T, icon, label, sub, status, onClick }) {
+  const P = T.P;
+  return (
+    <button onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 13, width: "100%",
+      textAlign: "left", background: P.panel, border: `1px solid ${P.line}`, borderRadius: T.rad,
+      padding: "15px 16px", cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>
+      <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: P.accentSoft,
+        display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Icon name={icon} size={19} color={P.accent} />
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "block", fontSize: 15.5, color: P.text, fontWeight: 500 }}>{label}</span>
+        <span style={{ display: "block", fontSize: 12.5, color: P.subtle, marginTop: 2 }}>{sub}</span>
+      </span>
+      {status}
+      <Icon name="ChevronRight" size={18} color={P.subtle} />
+    </button>
+  );
+}
+
+// ---- 智能识别 (BYOK AI) sub-page body ----
+function MSAiBody({ T }) {
   const P = T.P;
   const ai = useAiSettings();
   const [adv, setAdv] = useStateMS(false);
@@ -57,7 +81,7 @@ function MSettingsSheet({ T, onClose }) {
     color: P.text, outline: "none", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" };
 
   return (
-    <MSheet T={T} title="设置" sub="截图识别 · BYOK" onClose={onClose}>
+    <>
       <div style={{ fontSize: 12.5, color: P.subtle, margin: "0 4px 20px", lineHeight: 1.55 }}>
         截图导入由你自己的大模型 API 识别。填入 API Key 后即可使用，未填则无法使用截图导入。
       </div>
@@ -118,7 +142,48 @@ function MSettingsSheet({ T, onClose }) {
         导入的截图会上传至 <b style={{ color: P.text, fontWeight: 600 }}>{prov.short}</b> 进行识别。
         持仓数据较为敏感，请确认你信任该服务商。API Key 仅保存在本设备。
       </div>
+    </>
+  );
+}
+
+// ---- settings sheet: menu → sub-page ----
+function MSettingsSheet({ T, onClose }) {
+  const P = T.P;
+  const [view, setView] = useStateMS("menu");
+  const configured = useAiSettings().isConfigured();
+  const m = useSyncMachine("mobile");
+
+  const title = view === "ai" ? "智能识别" : view === "sync" ? "备份与同步" : "设置";
+  const sub = view === "ai" ? "截图识别 · BYOK" : null;
+
+  return (
+    <>
+    <MSheet T={T} title={title} sub={sub} onClose={onClose}
+      onBack={view === "menu" ? undefined : () => setView("menu")}>
+
+      {view === "menu" && (
+        <div style={{ paddingBottom: 4 }}>
+          <MSMenuRow T={T} icon="Sparkles" label="智能识别" sub="截图导入 · 自带大模型 API"
+            onClick={() => setView("ai")}
+            status={<span style={{ fontSize: 12, color: configured ? (P.isDark ? "#37c98c" : "#0f9d63") : P.subtle,
+              marginRight: 2 }}>{configured ? "已配置" : "未配置"}</span>} />
+          <MSMenuRow T={T} icon="RefreshCcw" label="备份与同步" sub="Google Drive 云同步与本地备份"
+            onClick={() => setView("sync")} />
+        </div>
+      )}
+
+      {view === "ai" && <MSAiBody T={T} />}
+
+      {view === "sync" && (
+        <div style={{ position: "relative", height: "min(560px, 68vh)", overflow: "hidden",
+          margin: "-16px -20px -8px" }}>
+          <SyncBody surface="mobile" P={P} m={m} />
+        </div>
+      )}
     </MSheet>
+    {/* 同步确认 / 授权 — 以整个手机为宿主的底部弹层，而非局限在子页区域 */}
+    {view === "sync" && <SyncOverlays surface="mobile" P={P} m={m} z={210} />}
+    </>
   );
 }
 

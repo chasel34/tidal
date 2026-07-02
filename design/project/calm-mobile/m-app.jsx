@@ -173,6 +173,7 @@ function MApp() {
           <TweakSection label="行情配色" />
           <TweakRadio label="涨跌颜色" value={tw.colorway} options={["涨红跌绿", "涨绿跌红"]}
             onChange={v => setTweak("colorway", v)} />
+          <SyncDemoTweaks />
         </TweaksPanel>
       </div>
     </div>

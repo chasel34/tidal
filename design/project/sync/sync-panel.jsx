@@ -9,8 +9,8 @@ function SyncDialog({ P, S, surface, m }) {
   return (
     <div onMouseDown={m.closeDialog} style={{ position: "absolute", inset: 0, zIndex: 50,
       background: P.overlay, backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)",
-      display: "flex", alignItems: mobile ? "flex-end" : "flex-start", justifyContent: "center",
-      paddingTop: mobile ? 0 : "7%" }}>
+      display: "flex", alignItems: mobile ? "flex-end" : "center", justifyContent: "center",
+      padding: mobile ? 0 : "5%" }}>
       <div onMouseDown={e => e.stopPropagation()} className={mobile ? "sync-sheet-in" : "sync-modal-in"}
         style={{ width: mobile ? "100%" : (surface === "menubar" ? 416 : 448), maxWidth: "100%", maxHeight: "92%",
           display: "flex", flexDirection: "column", background: P.panel, border: `1px solid ${P.line}`,
@@ -30,11 +30,11 @@ function SyncDialog({ P, S, surface, m }) {
   );
 }
 
-function SyncPanel({ P, S, surface, m }) {
+function SyncPanel({ P, S, surface, m, flow, bare }) {
   const { screen, dialog, oauth } = m.state;
   return (
-    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+    <div style={{ position: "relative", height: flow ? "auto" : "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ flex: flow ? "0 0 auto" : 1, minHeight: 0, overflowY: flow ? "visible" : "auto" }}>
         <EntryRow P={P} S={S} surface={surface} screen={screen} status={m.state.status} />
         <div style={{ padding: S.pad }}>
           {screen === "disconnected" && <DisconnectedScreen P={P} S={S} surface={surface} m={m} />}
@@ -42,8 +42,8 @@ function SyncPanel({ P, S, surface, m }) {
           {screen === "connected" && <ConnectedScreen P={P} S={S} surface={surface} m={m} />}
         </div>
       </div>
-      {dialog && <SyncDialog P={P} S={S} surface={surface} m={m} />}
-      {oauth && <OAuthOverlay P={P} S={S} surface={surface} m={m} />}
+      {!bare && dialog && <SyncDialog P={P} S={S} surface={surface} m={m} />}
+      {!bare && oauth && <OAuthOverlay P={P} S={S} surface={surface} m={m} />}
     </div>
   );
 }
