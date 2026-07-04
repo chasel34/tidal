@@ -1,5 +1,5 @@
-import { aiDefaultState } from "@tidal/core";
-import type { Instrument, MenubarConfig, Period } from "./types";
+import { aiDefaultState, PERIOD_LENGTHS } from "@tidal/core";
+import type { Instrument, MenubarConfig } from "./types";
 
 export const DASHBOARD_URL = "https://tidal-murex.vercel.app/";
 
@@ -11,12 +11,8 @@ export const INDICES: Instrument[] = [
   { code: "sh000688", name: "科创50", market: "sh", category: "index", type: "ZS" },
 ];
 
-export const PERIODS: Record<Exclude<Period, "1D">, number> = {
-  "1W": 5,
-  "1M": 22,
-  "3M": 66,
-  "1Y": 250,
-};
+/** Trading-day lengths per 走势周期 — single source of truth in @tidal/core. */
+export const PERIODS = PERIOD_LENGTHS;
 
 export const DEFAULT_CONFIG: MenubarConfig = {
   schema: "tidal-menubar-config",

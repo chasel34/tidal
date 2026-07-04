@@ -11,8 +11,7 @@ import { MStat } from "@/components/mobile/ui/MStat";
 import { MSectionLabel } from "@/components/mobile/ui/MSectionLabel";
 import { MArea } from "@/components/mobile/charts/MArea";
 import type { FundAllocSegment } from "@/lib/types";
-
-type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
+import type { SheetState } from "@/components/mobile/types";
 
 interface MFundDetailProps {
   code: string;
@@ -64,7 +63,8 @@ export function MFundDetail({ code, openSheet }: MFundDetailProps) {
 
   const estNav = q?.estimatedNav ?? q?.price ?? 0;
   const estPct = q?.estimatedChangePercent ?? q?.changePercent ?? 0;
-  const nav = q?.nav ?? profile?.accNav ?? 0;
+  // 单位净值 must not fall back to 累计净值 — show "--" instead of a wrong figure
+  const nav = q?.nav ?? 0;
   const accNav = q?.accNav ?? profile?.accNav;
 
   const navHistory = profile?.navHistory ?? [];

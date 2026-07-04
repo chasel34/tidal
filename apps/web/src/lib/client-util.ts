@@ -1,10 +1,8 @@
+import { hasKlineMarket } from "@tidal/core";
 import type { Instrument } from "./types";
 
 /** Client-safe check (no SDK import) for whether OHLC k-line is available. */
-export function hasKlineMarket(market: string): boolean {
-  const m = market?.toLowerCase();
-  return m === "sh" || m === "sz" || m === "bj";
-}
+export { hasKlineMarket };
 
 export function hasKline(inst: Pick<Instrument, "market">): boolean {
   return hasKlineMarket(inst.market);

@@ -58,6 +58,9 @@ export function usePortfolioSeries(period: Period): SeriesResult {
     },
     enabled: hydrated && holdings.length > 0,
     staleTime: 60_000,
+    // live prices are baked into the key — keep the last chart while the new
+    // key computes so every quote poll doesn't flash the loading state
+    placeholderData: (previous) => previous,
   });
 
   if (!hydrated || !holdings.length) return EMPTY;

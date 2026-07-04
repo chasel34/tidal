@@ -52,18 +52,18 @@ export const PERIOD_LENGTHS: Record<Exclude<Period, "1D">, number> = {
 };
 
 export function createPortfolioHistory(options: PortfolioHistoryOptions): PortfolioHistory {
-  const hasKlineMarket = options.hasKlineMarket ?? defaultHasKlineMarket;
+  const klineMarket = options.hasKlineMarket ?? hasKlineMarket;
 
   return {
     async buildSeries({ holdings, cash, period, quotes }) {
       if (!holdings.length) return { series: [], labels: [] };
 
       if (period === "1D") {
-        const minuteMap = await fetchMinuteMap(holdings, options.port, hasKlineMarket);
+        const minuteMap = await fetchMinuteMap(holdings, options.port, klineMarket);
         return buildIntradaySeries({ holdings, cash, minuteMap, quotes });
       }
 
-      const closesMap = await fetchClosesMap(holdings, options.port, hasKlineMarket);
+      const closesMap = await fetchClosesMap(holdings, options.port, klineMarket);
       return buildDailySeries({ holdings, cash, closesMap, period, quotes });
     },
   };
@@ -72,30 +72,29 @@ export function createPortfolioHistory(options: PortfolioHistoryOptions): Portfo
 export function buildDailySeries(input: BuildDailySeriesInput): SeriesPoint {
   const { holdings, cash, closesMap, period, quotes = {} } = input;
   const take = PERIOD_LENGTHS[period];
-  const perHolding = holdings.map((holding) => ({
+  const withMaps = holdings.map((holding) => ({
     holding,
     map: closesMap.get(holding.instrument.code) ?? null,
   }));
 
   const dateSet = new Set<string>();
-  perHolding.forEach(({ map }) => {
+  withMaps.forEach(({ map }) => {
     if (map) for (const date of map.keys()) dateSet.add(date);
   });
   const allDates = [...dateSet].sort();
   if (!allDates.length) return { series: [], labels: [] };
   const dates = allDates.slice(-take);
 
+  const perHolding = withMaps.map(({ holding, map }) => ({
+    holding,
+    priceAt: valueAtOrBefore(map, allDates),
+  }));
+
   return {
     series: dates.map((date) => {
       let total = cash;
-      for (const { holding, map } of perHolding) {
-        const price = closeAtOrBefore(
-          map,
-          allDates,
-          date,
-          quotes[holding.instrument.code]?.price ?? 0
-        );
-        total += holding.shares * price;
+      for (const { holding, priceAt } of perHolding) {
+        total += holding.shares * priceAt(date, quotes[holding.instrument.code]?.price ?? 0);
       }
       return total;
     }),
@@ -105,13 +104,13 @@ export function buildDailySeries(input: BuildDailySeriesInput): SeriesPoint {
 
 export function buildIntradaySeries(input: BuildIntradaySeriesInput): SeriesPoint {
   const { holdings, cash, minuteMap, quotes } = input;
-  const perHolding = holdings.map((holding) => ({
+  const withMaps = holdings.map((holding) => ({
     holding,
     map: minuteMap.get(holding.instrument.code) ?? null,
   }));
 
   const timeSet = new Set<string>();
-  perHolding.forEach(({ map }) => {
+  withMaps.forEach(({ map }) => {
     if (map) for (const time of map.keys()) timeSet.add(time);
   });
   const times = [...timeSet].sort();
@@ -126,17 +125,16 @@ export function buildIntradaySeries(input: BuildIntradaySeriesInput): SeriesPoin
     return { series: [total, total], labels: ["开盘", "当前"] };
   }
 
+  const perHolding = withMaps.map(({ holding, map }) => ({
+    holding,
+    priceAt: valueAtOrBefore(map, times),
+  }));
+
   return {
     series: times.map((time) => {
       let total = cash;
-      for (const { holding, map } of perHolding) {
-        const price = closeAtOrBefore(
-          map,
-          times,
-          time,
-          quotes[holding.instrument.code]?.price ?? 0
-        );
-        total += holding.shares * price;
+      for (const { holding, priceAt } of perHolding) {
+        total += holding.shares * priceAt(time, quotes[holding.instrument.code]?.price ?? 0);
       }
       return total;
     }),
@@ -194,23 +192,28 @@ async function fetchClosesMap(
   return closesMap;
 }
 
-function closeAtOrBefore(
+/**
+ * Precompute an at-or-before lookup for one holding: a single forward-fill
+ * pass over the sorted key union, instead of rescanning it per (key, holding).
+ */
+function valueAtOrBefore(
   map: Map<string, number> | null,
-  allKeys: string[],
-  key: string,
-  fallback: number
-): number {
-  if (!map) return fallback;
-  if (map.has(key)) return map.get(key)!;
+  allKeys: string[]
+): (key: string, fallback: number) => number {
+  if (!map) return (_key, fallback) => fallback;
+  const carried = new Map<string, number>();
   let last = 0;
-  for (const candidate of allKeys) {
-    if (candidate > key) break;
-    if (map.has(candidate)) last = map.get(candidate)!;
+  for (const key of allKeys) {
+    if (map.has(key)) last = map.get(key)!;
+    carried.set(key, last);
   }
-  return last || fallback;
+  return (key, fallback) => {
+    if (map.has(key)) return map.get(key)!;
+    return carried.get(key) || fallback;
+  };
 }
 
-function defaultHasKlineMarket(market: string): boolean {
+export function hasKlineMarket(market: string): boolean {
   const normalized = market?.toLowerCase();
   return normalized === "sh" || normalized === "sz" || normalized === "bj";
 }

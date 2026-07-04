@@ -182,7 +182,9 @@ export async function getFundProfile(code: string): Promise<FundProfile | null> 
   const cached = profileCache.get(bare);
   if (cached && Date.now() - cached.at < PROFILE_TTL_MS) return cached.profile;
   const profile = await buildFundProfile(bare, eastmoneyAdapter, sdkAdapter());
-  profileCache.set(bare, { at: Date.now(), profile });
+  // all sources failed → don't pin the empty result for the whole TTL
+  const empty = !profile.name && !profile.navHistory.length && !profile.topHoldings.length;
+  if (!empty) profileCache.set(bare, { at: Date.now(), profile });
   return profile;
 }
 

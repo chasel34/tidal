@@ -1,23 +1,9 @@
 "use client";
 
-import { useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useId, useMemo, useState, useCallback } from "react";
 import type { Palette } from "@/lib/theme";
 import { cFmtCompact } from "@/lib/format";
-
-function useMeasure(): [React.RefObject<HTMLDivElement | null>, number] {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [w, setW] = useState(0);
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver((entries) => {
-      setW(entries[0].contentRect.width);
-    });
-    ro.observe(ref.current);
-    setW(ref.current.getBoundingClientRect().width);
-    return () => ro.disconnect();
-  }, []);
-  return [ref, w];
-}
+import { useMeasure } from "@/components/shared/charts/useMeasure";
 
 interface MAreaProps {
   series: number[];
@@ -28,7 +14,6 @@ interface MAreaProps {
   accentSoft?: string;
   formatValue?: (v: number) => string;
   formatY?: (v: number) => string;
-  baseline?: boolean;
 }
 
 export function MArea({
@@ -40,7 +25,6 @@ export function MArea({
   accentSoft,
   formatValue,
   formatY,
-  baseline = true,
 }: MAreaProps) {
   const [containerRef, width] = useMeasure();
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -63,7 +47,9 @@ export function MArea({
     const raw_max = Math.max(...series);
     const range = raw_max - raw_min || 1;
     const vPad = range * 0.16;
-    const min = baseline ? Math.min(raw_min, 0) - vPad : raw_min - vPad;
+    // zoom to the data like the shared AreaChart — anchoring the axis at 0
+    // squashed typical 资产/净值 series into a flat band at the top
+    const min = raw_min - vPad;
     const max = raw_max + vPad;
     const yScale = (v: number) => pad.top + innerH * (1 - (v - min) / (max - min));
     const xStep = innerW / (series.length - 1);
@@ -77,7 +63,7 @@ export function MArea({
     }
 
     return { min, max, points, linePath, areaPath, ticks, xStep, yScale };
-  }, [series, innerW, innerH, baseline, pad.top, pad.left]);
+  }, [series, innerW, innerH, pad.top, pad.left]);
 
   const updateHover = useCallback((e: React.PointerEvent) => {
     if (!geo || innerW <= 0) return;

@@ -137,6 +137,10 @@ async function markSynced(revision: string, fingerprint: string): Promise<void> 
   cloudPreview = null;
   await persistBook();
   emit();
+  // A config save that landed while this sync was in flight was skipped by
+  // onLocalConfigSaved (status was "syncing") — re-check so it isn't lost.
+  const config = await loadConfig();
+  if (coreFingerprint(coreFromConfig(config)) !== fingerprint) onLocalConfigSaved(config);
 }
 
 function onError(err: unknown): void {

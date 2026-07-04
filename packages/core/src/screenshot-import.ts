@@ -309,7 +309,11 @@ export function reconstructHolding(
     if (totalCost != null && shares > 0) cost = totalCost / shares;
   }
 
-  if (!(shares > 0) || !(cost > 0)) return null;
+  // profitPct = -100 makes the totalCost denominator zero → cost = Infinity,
+  // which would poison every downstream aggregate; treat it as underivable.
+  if (!(shares > 0) || !(cost > 0) || !Number.isFinite(shares) || !Number.isFinite(cost)) {
+    return null;
+  }
   return { shares, cost };
 }
 
@@ -379,11 +383,13 @@ function normName(name: string): string {
 export function matchInstrument(row: ExtractedRow, candidates: Instrument[]): MatchResult {
   if (!candidates.length) return { instrument: null, status: "unmatched" };
 
-  if (row.code) {
-    const target = normCode(row.code);
+  // Placeholder codes like "--" normalize to "", and "".endsWith("") matches
+  // everything — only trust the code path when something alphanumeric remains.
+  const codeTarget = row.code ? normCode(row.code) : "";
+  if (codeTarget) {
     const byCode = candidates.find((c) => {
       const nc = normCode(c.code);
-      return nc === target || nc.endsWith(target) || target.endsWith(nc);
+      return nc === codeTarget || nc.endsWith(codeTarget) || codeTarget.endsWith(nc);
     });
     if (byCode) return { instrument: byCode, status: "matched" };
   }

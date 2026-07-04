@@ -1,23 +1,9 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import type { Palette } from "@/lib/theme";
 import { cFmtNum, cFmtPct } from "@/lib/format";
-
-function useMeasure(): [React.RefObject<HTMLDivElement | null>, number] {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [w, setW] = useState(0);
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver((entries) => {
-      setW(entries[0].contentRect.width);
-    });
-    ro.observe(ref.current);
-    setW(ref.current.getBoundingClientRect().width);
-    return () => ro.disconnect();
-  }, []);
-  return [ref, w];
-}
+import { useMeasure } from "@/components/shared/charts/useMeasure";
 
 interface Candle {
   open: number;
@@ -89,7 +75,8 @@ export function MCandle({
   }
 
   const xLabels = labels ?? [];
-  const xLabelIdxs = [0, Math.floor((candles.length - 1) / 2), candles.length - 1];
+  // de-dup so a short series (length ≤ 2) doesn't produce duplicate keys
+  const xLabelIdxs = [...new Set([0, Math.floor((candles.length - 1) / 2), candles.length - 1])];
 
   return (
     <div
@@ -152,6 +139,8 @@ export function MCandle({
         {/* hover highlight */}
         {hoverIdx !== null && (() => {
           const c = candles[hoverIdx];
+          // candles can shrink mid-hover (period switch) — bail instead of crashing
+          if (!c) return null;
           const cx = pad.left + hoverIdx * geo.cw;
           const chg = c.open !== 0 ? ((c.close - c.open) / c.open) * 100 : 0;
           const tooltipX = Math.min(cx, width - pad.right - 146);

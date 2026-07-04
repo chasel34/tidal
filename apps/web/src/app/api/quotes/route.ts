@@ -12,6 +12,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ quotes });
   } catch (e) {
     console.error("[api/quotes] quote refresh failed", e);
-    throw e;
+    return NextResponse.json(
+      { quotes: [], error: (e as Error)?.message ?? "quote refresh failed" },
+      { status: 502 }
+    );
   }
 }

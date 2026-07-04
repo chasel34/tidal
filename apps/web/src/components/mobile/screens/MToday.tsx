@@ -13,8 +13,7 @@ import { Spark } from "@/components/shared/charts/Spark";
 import { Donut } from "@/components/shared/charts/Donut";
 import { MIndexBar } from "@/components/mobile/ui/MIndexBar";
 import type { Period } from "@/lib/types";
-
-type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
+import type { SheetState } from "@/components/mobile/types";
 
 interface MTodayProps {
   goDetail: (code: string) => void;

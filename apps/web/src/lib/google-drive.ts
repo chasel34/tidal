@@ -67,10 +67,17 @@ function loadGis(): Promise<void> {
   if (window.google?.accounts?.oauth2) return Promise.resolve();
   if (gisPromise) return gisPromise;
   gisPromise = new Promise<void>((resolve, reject) => {
+    // On failure, drop the cached promise and the dead tag so the next 连接
+    // click can retry the load instead of replaying the same rejection forever.
+    const fail = (node: HTMLScriptElement) => () => {
+      gisPromise = null;
+      node.remove();
+      reject(new Error("无法加载 Google 登录脚本"));
+    };
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${GIS_SRC}"]`);
     if (existing) {
       existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("无法加载 Google 登录脚本")));
+      existing.addEventListener("error", fail(existing));
       return;
     }
     const script = document.createElement("script");
@@ -78,7 +85,7 @@ function loadGis(): Promise<void> {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("无法加载 Google 登录脚本"));
+    script.onerror = fail(script);
     document.head.appendChild(script);
   });
   return gisPromise;

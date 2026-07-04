@@ -160,6 +160,11 @@ function captureAuthCode(challenge: string): Promise<{ code: string; redirectUri
       const url = new URL(req.url ?? "/", "http://127.0.0.1");
       const code = url.searchParams.get("code");
       const error = url.searchParams.get("error");
+      if (!code && !error) {
+        // stray request (e.g. /favicon.ico) — keep waiting for the OAuth redirect
+        res.writeHead(404).end();
+        return;
+      }
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       res.end(
         `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;text-align:center;padding:48px;color:#272420">` +

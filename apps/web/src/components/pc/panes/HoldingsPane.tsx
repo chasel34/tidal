@@ -9,6 +9,7 @@ import { useKline } from "@/hooks/useKline";
 import { isOffMarketFund } from "@/lib/client-util";
 import { CandleChart } from "@/components/shared/charts/CandleChart";
 import { FundDetail } from "@/components/pc/panes/FundDetail";
+import { ImportBanner, useImportMsg } from "@/components/shared/ui/ImportBanner";
 import { SortTh } from "@/components/shared/ui/SortTh";
 import { Stat } from "@/components/shared/ui/Stat";
 import { EmptyState } from "@/components/shared/ui/EmptyState";
@@ -28,16 +29,9 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
   const { sortedHoldings, summary } = usePortfolioDerived();
   const [selCode, setSelCode] = useState<string | null>(null);
   const [detailPeriod, setDetailPeriod] = useState<DetailPeriod>("3M");
-  const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const { importMsg, showMsg } = useImportMsg();
   const fileRef = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const list = sortedHoldings;
-
-  function showMsg(text: string, ok: boolean) {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setImportMsg({ text, ok });
-    timerRef.current = setTimeout(() => setImportMsg(null), 3000);
-  }
 
   function handleExport() {
     exportJSON("holdings", holdings);
@@ -120,33 +114,7 @@ export function HoldingsPane({ P, openModal }: { P: Palette } & PaneProps) {
         </div>
       </div>
 
-      {importMsg && (
-        <div
-          style={{
-            marginBottom: 14,
-            padding: "8px 14px",
-            borderRadius: 8,
-            fontSize: 13,
-            background: importMsg.ok
-              ? P.isDark
-                ? "#1a2e1a"
-                : "#f0faf0"
-              : P.isDark
-                ? "#2e1a1a"
-                : "#faf0f0",
-            color: importMsg.ok
-              ? P.isDark
-                ? "#6ecf6e"
-                : "#2a7a2a"
-              : P.isDark
-                ? "#cf6e6e"
-                : "#9a2a2a",
-            border: `1px solid ${importMsg.ok ? (P.isDark ? "#2d4a2d" : "#c8e6c8") : P.isDark ? "#4a2d2d" : "#e6c8c8"}`,
-          }}
-        >
-          {importMsg.text}
-        </div>
-      )}
+      <ImportBanner P={P} msg={importMsg} />
 
       {list.length === 0 ? (
         <EmptyState

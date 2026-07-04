@@ -164,7 +164,7 @@ export const useSync = create<SyncState>()(
         fail("temp", err instanceof Error ? err.message : String(err));
       };
 
-      const markSynced = (revision: string, fingerprint: string) =>
+      const markSynced = (revision: string, fingerprint: string) => {
         set({
           screen: "connected",
           status: "synced",
@@ -176,6 +176,10 @@ export const useSync = create<SyncState>()(
           source: currentSurface(),
           cloudPreview: null,
         });
+        // An edit made while this sync was in flight was skipped by
+        // markLocalDirty (status was "syncing") — re-check now so it isn't lost.
+        if (coreFingerprint(localCore()) !== fingerprint) get().markLocalDirty();
+      };
 
       // upload local 组合核心 as the new cloud truth
       const uploadLocal = async () => {
