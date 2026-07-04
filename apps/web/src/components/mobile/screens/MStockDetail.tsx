@@ -11,8 +11,7 @@ import { MStat } from "@/components/mobile/ui/MStat";
 import { MSectionLabel } from "@/components/mobile/ui/MSectionLabel";
 import { MCandle } from "@/components/mobile/charts/MCandle";
 import type { DetailPeriod } from "@/lib/types";
-
-type SheetState = { type: "watch" } | { type: "holding"; code?: string } | null;
+import type { SheetState } from "@/components/mobile/types";
 
 interface MStockDetailProps {
   code: string;

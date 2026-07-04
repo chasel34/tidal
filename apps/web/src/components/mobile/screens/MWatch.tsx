@@ -9,13 +9,7 @@ import { MCard } from "@/components/mobile/ui/MCard";
 import { MEmpty } from "@/components/mobile/ui/MEmpty";
 import { Spark } from "@/components/shared/charts/Spark";
 import type { WatchSortKey } from "@/lib/types";
-
-type SheetState =
-  | { type: "watch" }
-  | { type: "holding"; code?: string }
-  | { type: "ocr"; target?: "holding" | "watch" }
-  | { type: "settings"; view?: "ai" | "sync" }
-  | null;
+import type { SheetState } from "@/components/mobile/types";
 
 interface MWatchProps {
   goDetail: (code: string) => void;
@@ -32,17 +26,19 @@ function MSwipeRow({ children, onDelete, P }: { children: React.ReactNode; onDel
   const [dx, setDx] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
+  const baseDx = useRef(0);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     startX.current = e.clientX;
+    baseDx.current = dx; // start from the row's current offset — no jump on an already-open row
     setIsDragging(true);
-  }, []);
+  }, [dx]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDragging) return;
     const diff = e.clientX - startX.current;
-    setDx(Math.min(0, Math.max(-84, diff)));
+    setDx(Math.min(0, Math.max(-84, baseDx.current + diff)));
   }, [isDragging]);
 
   const onPointerUp = useCallback(() => {

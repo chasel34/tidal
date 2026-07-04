@@ -6,13 +6,7 @@ import { cFmtMoney, cFmtPct, cMove } from "@/lib/format";
 import { MCard } from "@/components/mobile/ui/MCard";
 import { MEmpty } from "@/components/mobile/ui/MEmpty";
 import type { HoldingSortKey } from "@/lib/types";
-
-type SheetState =
-  | { type: "watch" }
-  | { type: "holding"; code?: string }
-  | { type: "ocr"; target?: "holding" | "watch" }
-  | { type: "settings"; view?: "ai" | "sync" }
-  | null;
+import type { SheetState } from "@/components/mobile/types";
 
 interface MHoldingsProps {
   goDetail: (code: string) => void;

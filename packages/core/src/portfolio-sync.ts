@@ -48,6 +48,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+const KNOWN_CATEGORIES: readonly Instrument["category"][] = [
+  "stock",
+  "index",
+  "fund",
+  "bond",
+  "futures",
+  "option",
+  "other",
+];
+
+function normalizeCategory(value: string): Instrument["category"] {
+  return (KNOWN_CATEGORIES as readonly string[]).includes(value)
+    ? (value as Instrument["category"])
+    : "other";
+}
+
 function normalizeInstrument(value: unknown): Instrument | null {
   if (!isRecord(value)) return null;
   if (
@@ -63,7 +79,7 @@ function normalizeInstrument(value: unknown): Instrument | null {
     code: value.code,
     name: value.name,
     market: value.market,
-    category: value.category as Instrument["category"],
+    category: normalizeCategory(value.category),
     type: value.type,
   };
 }
@@ -133,7 +149,9 @@ export interface ParsedSyncDocument {
 /**
  * Parse a cloud document. Returns null when the text is not a recognizable
  * tidal sync document — the app maps that to the "云端数据无法识别" (badCloud)
- * failure rather than silently treating it as empty.
+ * failure rather than silently treating it as empty. A document written by a
+ * newer schema version is also rejected: lenient-normalizing an unknown shape
+ * could drop rows and then overwrite the cloud copy with the truncated result.
  */
 export function parseSyncDocument(text: string): ParsedSyncDocument | null {
   let raw: unknown;
@@ -142,7 +160,7 @@ export function parseSyncDocument(text: string): ParsedSyncDocument | null {
   } catch {
     return null;
   }
-  if (!isRecord(raw) || raw.schema !== SYNC_SCHEMA) return null;
+  if (!isRecord(raw) || raw.schema !== SYNC_SCHEMA || raw.version !== SYNC_VERSION) return null;
   const surface =
     raw.updatedBy === "web" || raw.updatedBy === "menubar" || raw.updatedBy === "mobile"
       ? raw.updatedBy

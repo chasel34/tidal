@@ -65,15 +65,12 @@ export function validateHoldings(raw: unknown): HoldingItem[] {
   if (envelope.type !== "holdings") throw new Error("文件类型不匹配，请选择持仓导出文件");
   if (!Array.isArray(envelope.data)) throw new Error("data 字段必须为数组");
 
-  const seen = new Set<string>();
   return (envelope.data as unknown[]).map((item, i) => {
     if (!item || typeof item !== "object") throw new Error(`第 ${i + 1} 条记录格式错误`);
     const h = item as Record<string, unknown>;
     validateInstrument(h.instrument);
     if (!isPositiveFinite(h.shares)) throw new Error(`第 ${i + 1} 条记录 shares 无效`);
     if (!isPositiveFinite(h.cost)) throw new Error(`第 ${i + 1} 条记录 cost 无效`);
-    const code = (h.instrument as Record<string, string>).code;
-    seen.add(code);
     return h as unknown as HoldingItem;
   });
 }

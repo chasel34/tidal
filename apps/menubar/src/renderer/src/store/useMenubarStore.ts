@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { create } from "zustand";
 import { DEFAULT_CONFIG, INDICES } from "@shared/constants";
 import { derivePortfolio } from "@shared/portfolio";
@@ -86,12 +87,11 @@ export function useResolvedTheme(): ResolvedTheme {
 export function usePortfolioDerived() {
   const config = useConfig();
   const quotes = useMenubarStore((state) => state.quotes);
-  return derivePortfolio({
-    holdings: config.holdings,
-    watch: config.watch,
-    cash: config.cash,
-    quotes,
-  });
+  const { holdings, watch, cash } = config;
+  return useMemo(
+    () => derivePortfolio({ holdings, watch, cash, quotes }),
+    [holdings, watch, cash, quotes],
+  );
 }
 
 export function useQuoteInstruments(): Instrument[] {

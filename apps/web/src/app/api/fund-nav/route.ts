@@ -10,6 +10,7 @@ interface RawNavItem {
 }
 
 const NAV_TTL_MS = 10 * 60_000;
+const NAV_CACHE_MAX = 500;
 const navCache = new Map<string, { at: number; points: FundNavPoint[] }>();
 
 export async function GET(req: Request) {
@@ -31,8 +32,16 @@ export async function GET(req: Request) {
       .filter((p) => p.nav != null)
       .map((p) => ({ date: p.date, nav: p.nav }));
     navCache.set(code, { at: Date.now(), points });
+    // cap the per-instance cache — codes are attacker-controllable input
+    if (navCache.size > NAV_CACHE_MAX) {
+      navCache.delete(navCache.keys().next().value!);
+    }
     return NextResponse.json({ points });
-  } catch {
-    return NextResponse.json({ points: [] });
+  } catch (e) {
+    // 502 keeps the failure out of client caches so the next request retries
+    return NextResponse.json(
+      { points: [], error: (e as Error)?.message ?? "fetch failed" },
+      { status: 502 }
+    );
   }
 }

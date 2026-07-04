@@ -25,5 +25,8 @@ export function usePortfolioSeries() {
       }),
     enabled: hydrated && config.holdings.length > 0,
     staleTime: 60_000,
+    // live prices are baked into the key — keep the last chart while the new
+    // key computes so every quote poll doesn't flash the empty state
+    placeholderData: (previous) => previous,
   });
 }

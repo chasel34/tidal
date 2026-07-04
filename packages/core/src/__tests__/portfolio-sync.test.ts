@@ -54,6 +54,15 @@ describe("normalizeCore", () => {
     expect(normalizeCore(null)).toEqual(emptyCore());
     expect(normalizeCore(42)).toEqual(emptyCore());
   });
+
+  it("coerces unknown categories to \"other\" instead of injecting invalid values", () => {
+    const core = normalizeCore({
+      holdings: [],
+      watch: [{ ...inst("600519"), category: "crypto" }],
+      cash: 0,
+    });
+    expect(core.watch[0].category).toBe("other");
+  });
 });
 
 describe("isEmptyCore", () => {
@@ -83,6 +92,13 @@ describe("build/parse round-trip", () => {
   it("returns null for non-JSON or a foreign schema (badCloud)", () => {
     expect(parseSyncDocument("not json")).toBeNull();
     expect(parseSyncDocument(JSON.stringify({ schema: "something-else" }))).toBeNull();
+  });
+
+  it("rejects documents from a different schema version instead of lenient-dropping rows", () => {
+    const v2 = JSON.stringify({ schema: SYNC_SCHEMA, version: 2, core: {} });
+    expect(parseSyncDocument(v2)).toBeNull();
+    const noVersion = JSON.stringify({ schema: SYNC_SCHEMA, core: {} });
+    expect(parseSyncDocument(noVersion)).toBeNull();
   });
 });
 

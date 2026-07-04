@@ -197,7 +197,11 @@ export function MOcrImportSheet({
         type="file"
         accept="image/*"
         style={{ display: "none" }}
-        onChange={(e) => void o.pickFile(e.target.files?.[0])}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.currentTarget.value = ""; // allow re-picking the same screenshot
+          void o.pickFile(file);
+        }}
       />
 
       {o.step === "gate" && (

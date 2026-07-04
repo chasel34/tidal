@@ -1,5 +1,5 @@
 import { app, dialog } from "electron";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { aiDefaultState, aiNormalize } from "@tidal/core";
 import { DEFAULT_CONFIG } from "@shared/constants";
@@ -137,9 +137,12 @@ export async function loadConfig(): Promise<MenubarConfig> {
   try {
     const raw = await readFile(configPath(), "utf8");
     return normalizeConfig(JSON.parse(raw));
-  } catch {
+  } catch (error) {
     const config = normalizeConfig(DEFAULT_CONFIG);
-    await saveConfig(config);
+    // Only seed defaults when the file is genuinely absent. A corrupt or
+    // unreadable config (the app's sole persistence) must stay on disk for
+    // recovery instead of being overwritten with an empty portfolio.
+    if ((error as NodeJS.ErrnoException)?.code === "ENOENT") await saveConfig(config);
     return config;
   }
 }
@@ -148,7 +151,10 @@ export async function saveConfig(config: MenubarConfig): Promise<MenubarConfig> 
   const normalized = normalizeConfig(config);
   const file = configPath();
   await mkdir(app.getPath("userData"), { recursive: true });
-  await writeFile(file, JSON.stringify(normalized, null, 2), "utf8");
+  // write-then-rename so a crash mid-write can't truncate the live config
+  const tmp = `${file}.tmp`;
+  await writeFile(tmp, JSON.stringify(normalized, null, 2), "utf8");
+  await rename(tmp, file);
   return normalized;
 }
 

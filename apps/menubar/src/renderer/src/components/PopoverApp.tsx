@@ -206,6 +206,7 @@ export function PopoverApp() {
     : "--:--:--";
 
   const systemTheme = useMenubarStore((state) => state.resolvedTheme);
+  const lastTrayKey = useRef("");
   useEffect(() => {
     const descriptor = describeTray({
       mode: config.menubarMode,
@@ -216,9 +217,16 @@ export function PopoverApp() {
       todayDelta: summary.todayDelta,
       totalAssets: summary.totalAssets,
     });
+    // icon-only mode yields the same descriptor on every poll — skip the
+    // canvas render + IPC round-trip when nothing visible changed
+    const key = JSON.stringify(descriptor);
+    if (key === lastTrayKey.current) return;
     let cancelled = false;
     void renderTrayImage(descriptor).then((bitmap) => {
       if (cancelled) return;
+      // commit only after the image is actually sent, so a cancelled run
+      // (StrictMode remount, rapid dep change) doesn't mark the key as applied
+      lastTrayKey.current = key;
       void window.tidal.setTrayImage({ bitmap, label: descriptor.label, tooltip: descriptor.tooltip, template: descriptor.template });
     });
     return () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { aiResolvedModel, screenshotSearchSeed, type Instrument } from "@tidal/core";
 import type { Palette } from "@/lib/theme";
 import { cFmtNum } from "@/lib/format";
@@ -251,6 +251,23 @@ export function OcrImportModal({
   const o = useOcrImport(defaultTarget);
   const state = useAiByok();
   const fileRef = useRef<HTMLInputElement>(null);
+  const { step, pickFile } = o;
+
+  // the upload zone advertises 粘贴 — accept a screenshot pasted from the clipboard
+  useEffect(() => {
+    if (step !== "upload") return;
+    const onPaste = (event: ClipboardEvent) => {
+      const item = Array.from(event.clipboardData?.items ?? []).find((it) =>
+        it.type.startsWith("image/"),
+      );
+      const file = item?.getAsFile();
+      if (!file) return;
+      event.preventDefault();
+      void pickFile(file);
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, [step, pickFile]);
 
   return (
     <Modal P={P} title="截图导入" onClose={onClose} width={520}>
@@ -298,7 +315,11 @@ export function OcrImportModal({
             type="file"
             accept="image/*"
             style={{ display: "none" }}
-            onChange={(e) => void o.pickFile(e.target.files?.[0])}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.currentTarget.value = ""; // allow re-picking the same screenshot
+              void o.pickFile(file);
+            }}
           />
           <div style={{ fontSize: 11.5, color: P.subtle, marginTop: 12, textAlign: "center" }}>
             当前识别引擎：{aiResolvedModel(state)}
@@ -346,7 +367,11 @@ export function OcrImportModal({
               type="file"
               accept="image/*"
               style={{ display: "none" }}
-              onChange={(e) => void o.pickFile(e.target.files?.[0])}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.currentTarget.value = "";
+                void o.pickFile(file);
+              }}
             />
             <button
               onClick={o.confirm}

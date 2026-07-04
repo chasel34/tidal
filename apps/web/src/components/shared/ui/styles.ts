@@ -37,7 +37,8 @@ export function tidalBtn(
     return {
       ...base,
       background: "transparent",
-      color: cMove(-1, P.isDark ? "dark" : "light"),
+      // 红涨绿跌下 cMove(1) 是红色 — 危险操作必须是红，不能用绿色的 cMove(-1)
+      color: cMove(1, P.isDark ? "dark" : "light"),
       border: `1px solid ${P.line}`,
     };
   return {

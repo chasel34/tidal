@@ -1,6 +1,6 @@
 {
   "name": "@tidal/menubar",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "main": "out/main/index.js",
@@ -57,8 +57,8 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
-    "@tidal/core": "workspace:*",
     "@tanstack/react-query": "catalog:",
+    "@tidal/core": "workspace:*",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

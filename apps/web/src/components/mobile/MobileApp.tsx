@@ -18,14 +18,8 @@ import { MHoldingSheet } from "@/components/mobile/sheets/MHoldingSheet";
 import { MOcrImportSheet } from "@/components/mobile/sheets/MOcrImportSheet";
 import { MSettingsSheet } from "@/components/mobile/sheets/MSettingsSheet";
 import { useSyncBootstrap } from "@/hooks/useSyncBootstrap";
-import type { OcrTarget } from "@/hooks/useOcrImport";
-
-type SheetState =
-  | { type: "watch" }
-  | { type: "holding"; code?: string }
-  | { type: "ocr"; target?: OcrTarget }
-  | { type: "settings"; view?: "ai" | "sync" }
-  | null;
+import { isOffMarketFund } from "@/lib/client-util";
+import type { SheetState } from "@/components/mobile/types";
 
 export function MobileApp() {
   const P = usePalette();
@@ -63,7 +57,7 @@ export function MobileApp() {
     ? holdingsFull.find((h) => h.code === detail) || watchFull.find((w) => w.code === detail) || null
     : null;
 
-  const isFund = detailInst ? detailInst.category === "fund" && detailInst.market?.toLowerCase() === "jj" : false;
+  const isFund = detailInst ? isOffMarketFund(detailInst) : false;
 
   // Top bar config
   let topTitle = "";
@@ -71,14 +65,16 @@ export function MobileApp() {
   let topOnBack: (() => void) | undefined;
   let topRight: React.ReactNode = undefined;
 
-  if (detail && detailInst) {
-    topTitle = detailInst.name;
-    topSub = `${detailInst.code} · ${typeLabel(detailInst)}`;
+  if (detail) {
+    // detailInst can vanish mid-view (持仓被删除 / 云同步覆盖) — the back button
+    // must survive that, otherwise the user is stuck with no tab bar either.
+    topTitle = detailInst?.name ?? detail;
+    topSub = detailInst ? `${detailInst.code} · ${typeLabel(detailInst)}` : undefined;
     topOnBack = () => setDetail(null);
     const inWatch = watch.some((w) => w.code === detail);
-    topRight = !inWatch ? (
+    topRight = detailInst && !inWatch ? (
       <button
-        onClick={() => { if (detailInst) addWatch(detailInst); }}
+        onClick={() => addWatch(detailInst)}
         style={{ background: "none", border: "none", cursor: "pointer", color: P.accent, fontSize: 14, fontWeight: 600 }}
       >
         ＋ 自选

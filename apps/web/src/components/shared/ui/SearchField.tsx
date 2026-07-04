@@ -49,6 +49,7 @@ export function SearchField({
       {value && (
         <button
           onClick={() => onChange("")}
+          aria-label="清除搜索"
           style={{
             background: "transparent",
             border: "none",

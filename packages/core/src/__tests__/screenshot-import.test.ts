@@ -134,6 +134,14 @@ describe("reconstructHolding", () => {
     );
     expect(r).toBeNull();
   });
+
+  it("returns null instead of Infinity when profitPct is exactly -100", () => {
+    const r = reconstructHolding(
+      { marketValue: 1000, profit: null, profitPct: -100, shares: null, cost: null },
+      1,
+    );
+    expect(r).toBeNull();
+  });
 });
 
 describe("screenshotSearchQueries", () => {
@@ -180,6 +188,15 @@ describe("matchInstrument", () => {
       candidates,
     );
     expect(m.instrument?.code).toBe("017641");
+  });
+
+  it("ignores placeholder codes that normalize to empty and falls back to name matching", () => {
+    const m = matchInstrument(
+      { name: "华泰柏瑞纳斯达克100ETF发起式联接（QDII）C", code: "--", marketValue: null, profit: null, profitPct: null, shares: null, cost: null },
+      candidates,
+    );
+    expect(m.status).toBe("matched");
+    expect(m.instrument?.code).toBe("017642");
   });
 
   it("is unmatched with no candidates", () => {

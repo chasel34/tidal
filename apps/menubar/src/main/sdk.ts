@@ -1,5 +1,8 @@
 import { StockSDK } from "stock-sdk";
-import type { Category, Instrument } from "@shared/types";
+
+// Market classification (quoteSource / hasKlineMarket / bareCode) lives in
+// @tidal/core; this module only owns the main-process SDK instance.
+export { bareCode, hasKlineMarket } from "@tidal/core";
 
 let sdk: StockSDK | null = null;
 
@@ -12,35 +15,4 @@ export function getSdk(): StockSDK {
     });
   }
   return sdk;
-}
-
-export type QuoteSource = "ashare" | "fund" | "hk" | "us";
-
-export function quoteSource(inst: {
-  code: string;
-  market: string;
-  category: Category;
-  type: string;
-}): QuoteSource {
-  const market = inst.market?.toLowerCase();
-  if (market === "hk") return "hk";
-  if (market === "us") return "us";
-  if (market === "jj") return "fund";
-  if (inst.category === "fund" && market !== "sh" && market !== "sz" && market !== "bj") {
-    return "fund";
-  }
-  return "ashare";
-}
-
-export function bareCode(code: string): string {
-  return code.replace(/^(sh|sz|bj|hk|us|jj)/i, "");
-}
-
-export function hasKlineMarket(market: string): boolean {
-  const m = market?.toLowerCase();
-  return m === "sh" || m === "sz" || m === "bj";
-}
-
-export function hasKline(inst: Pick<Instrument, "market">): boolean {
-  return hasKlineMarket(inst.market);
 }

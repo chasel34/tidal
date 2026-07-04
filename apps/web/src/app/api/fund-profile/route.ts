@@ -6,7 +6,13 @@ import type { FundProfile } from "@/lib/types";
 export const runtime = "nodejs";
 
 const PROFILE_TTL_MS = 10 * 60_000;
+const PROFILE_CACHE_MAX = 500;
 const profileCache = new Map<string, { at: number; data: FundProfile }>();
+
+/** All sources failed — don't cache, so a transient outage isn't pinned for 10 min. */
+function isEmptyProfile(profile: FundProfile): boolean {
+  return !profile.name && !profile.navHistory.length && !profile.topHoldings.length;
+}
 
 const eastmoneyAdapter: EastmoneyPort = {
   async fetchPingzhongScript(code) {
@@ -49,6 +55,11 @@ export async function GET(req: Request) {
   }
 
   const profile = await buildFundProfile(code, eastmoneyAdapter, sdkAdapter());
-  profileCache.set(code, { at: Date.now(), data: profile });
+  if (!isEmptyProfile(profile)) {
+    profileCache.set(code, { at: Date.now(), data: profile });
+    if (profileCache.size > PROFILE_CACHE_MAX) {
+      profileCache.delete(profileCache.keys().next().value!);
+    }
+  }
   return NextResponse.json({ profile });
 }

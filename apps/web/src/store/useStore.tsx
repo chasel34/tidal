@@ -121,7 +121,13 @@ const legacyStorage: StateStorage = {
   },
   setItem: (name, value) => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(name, unwrapPersistValue(value));
+    try {
+      window.localStorage.setItem(name, unwrapPersistValue(value));
+    } catch (error) {
+      // e.g. QuotaExceededError — persist calls setItem synchronously inside
+      // set(), so throwing here would break every store action.
+      console.warn("Unable to persist tidal store.", error);
+    }
   },
   removeItem: (name) => {
     if (typeof window === "undefined") return;

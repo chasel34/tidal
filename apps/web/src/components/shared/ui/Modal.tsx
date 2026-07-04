@@ -66,6 +66,7 @@ export function Modal({ P, title, onClose, children, width = 460 }: ModalProps) 
               {title}
             </Dialog.Title>
             <Dialog.Close
+              aria-label="关闭"
               style={{
                 background: "transparent",
                 border: "none",
